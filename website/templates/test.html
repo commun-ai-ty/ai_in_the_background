@@ -189,6 +189,10 @@
       font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; color: var(--teal-dk);
     }
+    .grid-subtitle.hidden {
+        visibility: hidden;
+    }
+
     /* the blue (teal) box itself */
     .grid-box {
       background: var(--teal);
@@ -520,7 +524,7 @@
                 <div class="speech-bubble">Let's tell the AI to refine our prompt!</div>
                 <button type="button" class="info-btn" id="refine-info-btn" aria-label="How does refinement work?">i</button>
             </div>
-            <div class="grid-subtitle"> hidden </div>
+            <div class="grid-subtitle hidden"> hidden </div>
             <div class="grid-box preview" id="submission-output">
                 &lt;AI internal thinking process&gt;
             </div>
