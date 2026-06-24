@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commun-AI-ty | App Workspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── SHARED THEME (matches home.html) ── */
+    :root {
+      --orange:    #F5820A;
+      --orange-lt: #FBBF6B;
+      --teal:      #0D9E8A;
+      --teal-lt:   #6EDFD0;
+      --teal-dk:   #075F54;
+      --cream:     #FDF8F2;
+      --dark:      #0E1F1C;
+      --mid:       #1E3530;
+      --text:      #2C4A44;
+      --muted:     #6B8F89;
+      --card-bg:   #FFFFFF;
+      --border:    rgba(13,158,138,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      overflow-x: hidden;
+      /* full-height column: nav (fixed) · workspace (grows) · footer */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV (same as home) ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 3rem; height: 68px;
+      background: rgba(253,248,242,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; height: 68px; text-decoration: none; }
+    .nav-logo img { height: 34px; width: auto; display: block; }
+    .nav-cta {
+      background: var(--orange); color: #fff;
+      padding: 0.5rem 1.25rem; border-radius: 100px;
+      font-size: 0.85rem; font-weight: 600; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,130,10,0.35); }
+
+    /* ── PAGE HEADER ── */
+    .app-header {
+      padding: 7rem 3rem 2.5rem;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .app-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(13,158,138,0.08);
+      border: 1px solid rgba(13,158,138,0.25);
+      padding: 0.35rem 0.9rem; border-radius: 100px;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--teal-dk);
+      margin-bottom: 1.25rem;
+    }
+    .app-eyebrow::before {
+      content: ''; width: 7px; height: 7px;
+      background: var(--teal); border-radius: 50%;
+    }
+    .app-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800; letter-spacing: -1px;
+      color: var(--dark); line-height: 1.1;
+      margin-bottom: 0.75rem;
+    }
+    .app-title em { font-style: normal; color: var(--orange); }
+    .app-title .teal { color: var(--teal); }
+    .app-subtitle {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.7;
+      color: var(--muted); max-width: 640px;
+    }
+
+    /* ── APP WORKSPACE (your blank canvas) ── */
+    .workspace {
+      width: 100%; max-width: 1200px; margin: 0 auto;
+      /* top padding clears the fixed 68px nav; grow to fill leftover height */
+      padding: calc(68px + 2.5rem) 3rem 2.5rem;
+      flex: 1;
+      display: flex; flex-direction: column;
+    }
+    .app-shell {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 2rem;
+      box-shadow: 0 12px 40px rgba(14,31,28,0.06);
+      position: relative; overflow: hidden;
+      /* fill the workspace so the grid inside can take the full height */
+      flex: 1;
+      display: flex; flex-direction: column;
+    }
+    /* subtle teal/orange glow, same vibe as the hero */
+    .app-shell::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 50% 50% at 90% 0%, rgba(13,158,138,0.06), transparent 70%),
+        radial-gradient(ellipse 40% 40% at 0% 100%, rgba(245,130,10,0.05), transparent 70%);
+    }
+
+    /* ── REACT COMPONENT STYLES (the starter UI below) ── */
+    .demo {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center;
+      min-height: 400px; gap: 1.25rem;
+    }
+    .demo h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.5rem;
+      font-weight: 700; color: var(--dark);
+    }
+    .demo p { color: var(--muted); max-width: 420px; line-height: 1.6; }
+    .counter {
+      font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+      color: var(--teal); letter-spacing: -1px;
+    }
+    .demo-actions { display: flex; gap: 0.75rem; }
+    .btn {
+      padding: 0.7rem 1.6rem; border-radius: 100px; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 4px 16px rgba(245,130,10,0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,130,10,0.4); }
+    .btn-ghost { background: transparent; color: var(--teal-dk); border: 1.5px solid rgba(13,158,138,0.35); }
+    .btn-ghost:hover { background: rgba(13,158,138,0.08); }
+
+    /* ── MODE TOGGLE ── */
+    .mode-toggle {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    .mode-toggle .mode-label {
+      font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .switch {
+      display: inline-flex; background: #fff;
+      border: 1px solid var(--border); border-radius: 100px; padding: 3px;
+    }
+    .switch-opt {
+      border: none; background: transparent; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+      color: var(--muted); padding: 0.4rem 1.2rem; border-radius: 100px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .switch-opt.active { background: var(--teal); color: #fff; }
+    .switch-opt[data-mode="image"].active { background: var(--orange); }
+    .mode-hint { font-size: 0.8rem; color: var(--muted); }
+
+    /* premade image filling a box in image mode */
+    .grid-box img {
+      display: block; width: 100%; height: 100%;
+      object-fit: contain; border-radius: 10px;
+    }
+
+    /* ── 2x2 GRID OF BOXES ── */
+    .grid-2x2 {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;   /* 2 columns */
+      grid-template-rows: 1fr 1fr;       /* 2 rows */
+      gap: 1.5rem;
+      flex: 1;                            /* fill the app-shell height */
+    }
+    .grid-item { display: flex; flex-direction: column; gap: 0.5rem; min-height: 0; }
+    /* each box fills its grid cell below the subtitle */
+    .grid-item .grid-box { flex: 1; }
+    /* the little subtitle ABOVE each box */
+    .grid-subtitle {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--teal-dk);
+    }
+    /* the blue (teal) box itself */
+    .grid-box {
+      background: var(--teal);
+      color: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      min-height: 130px;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1.5;
+      box-shadow: 0 6px 20px rgba(13,158,138,0.25);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .grid-box:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(13,158,138,0.35); }
+
+    /* boxes that hold generated text: top-aligned, left-aligned, scroll if long */
+    .grid-box.output {
+      align-items: flex-start; justify-content: flex-start;
+      text-align: left; overflow-y: auto;
+      font-size: 0.85rem; line-height: 1.6;
+    }
+    .grid-box.output:hover { transform: none; box-shadow: 0 6px 20px rgba(13,158,138,0.25); }
+
+    /* bottom row = the "refined" pair: orange instead of teal, so each row
+       reads as a matched pair (top = basic/teal, bottom = refined/orange) */
+    .row-refined .grid-subtitle { color: var(--orange); }
+    .row-refined .grid-box {
+      background: var(--orange);
+      box-shadow: 0 6px 20px rgba(245,130,10,0.25);
+    }
+    .row-refined .grid-box:hover { box-shadow: 0 12px 28px rgba(245,130,10,0.35); }
+    .row-refined .grid-box.output:hover { box-shadow: 0 6px 20px rgba(245,130,10,0.25); }
+
+    /* the editable box overrides the solid fill so the form is readable */
+    .grid-box.editable {
+      background: #fff;
+      border: 1px solid var(--border);
+      flex-direction: column; align-items: stretch; gap: 0.75rem;
+      box-shadow: 0 6px 20px rgba(14,31,28,0.06);
+    }
+    .grid-box.editable:hover { transform: none; box-shadow: 0 6px 20px rgba(14,31,28,0.06); }
+    .grid-box.editable textarea {
+      width: 100%; flex: 1; resize: vertical; min-height: 70px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.5;
+      color: var(--text); background: var(--cream);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.75rem;
+    }
+    .grid-box.editable textarea:focus {
+      outline: none; border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(13,158,138,0.12);
+    }
+    /* the fill-in-the-blank sentence */
+    .grid-box.editable .adlib {
+      flex: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.05rem; line-height: 2.2; color: var(--text); text-align: left;
+    }
+    .grid-box.editable select {
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+      color: var(--teal-dk); background: var(--cream);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.2rem 0.5rem; margin: 0 0.15rem; cursor: pointer;
+    }
+    .grid-box.editable select:focus {
+      outline: none; border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(13,158,138,0.12);
+    }
+    .grid-box.editable .save-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    }
+    .grid-box.editable .save-status { font-size: 0.8rem; color: var(--muted); }
+    .grid-box.editable .save-status.ok  { color: var(--teal-dk); }
+    .grid-box.editable .save-status.err { color: #c0392b; }
+    .grid-box.editable .btn {
+      background: var(--orange); color: #fff;
+      box-shadow: 0 4px 16px rgba(245,130,10,0.3);
+    }
+    .grid-box.editable .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,130,10,0.4); }
+    .grid-box.editable .btn:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
+
+    @media (max-width: 600px) {
+      .grid-2x2 { grid-template-columns: 1fr; grid-template-rows: auto; }
+    }
+
+    /* ── FOOTER (same as home) ── */
+    footer {
+      background: var(--dark); border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 3rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .footer-links { display: flex; gap: 2rem; }
+    .footer-links a {
+      font-size: 0.82rem; color: rgba(255,255,255,0.4);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--teal-lt); }
+    .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .workspace { padding: calc(68px + 1.5rem) 1.5rem 2rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ================================================================================ 
+           NAV
+  ================================================================================ -->
+  <nav>
+    <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
+      <img src="{{ url_for('static', filename='commun-ai-ty_logo_color.png') }}" alt="Commun-AI-ty">
+    </a>
+    <a class="nav-cta" href="mailto:commun-ai-ty@umich.edu">Contact Us</a>
+  </nav>
+
+  <!-- ================================================================================
+           APP WORKSPACE
+  ================================================================================ -->
+  <main class="workspace">
+
+    <!-- --------------------------------------------------------------------------------
+             Mode toggle: Text <-> Image
+    -------------------------------------------------------------------------------- -->
+    <div class="mode-toggle">
+        <span class="mode-label">Mode</span>
+        <div class="switch" id="mode-switch">
+            <button type="button" class="switch-opt active" data-mode="text" >Text </button>
+            <button type="button" class="switch-opt"        data-mode="image">Image</button>
+        </div>
+        <span class="mode-hint" id="mode-hint"></span>
+    </div>
+
+    <!-- --------------------------------------------------------------------------------
+             2x2 Grid of Items
+    -------------------------------------------------------------------------------- -->
+    <div class="grid-2x2">
+
+        <!-- Top-left: ad-lib with two dropdowns 
+         --------------------------------------------------------------------------------  -->
+        <div class="grid-item">
+            <div class="grid-subtitle">Design your prompt!</div>
+            <form class="grid-box editable" id="save-form">
+            <p class="adlib">
+
+                Write me a one paragraph short story about 
+
+                <select id="character-select" name="character">
+                {% for character in options.characters %}
+                    <option value="{{ character }}">{{ character }}</option>
+                {% endfor %}
+                </select>
+
+                in the style of
+
+
+                <select id="style-select" name="style">
+                {% for style in options.styles %}
+                    <option value="{{ style }}">{{ style }}</option>
+                {% endfor %}
+                </select>
+
+
+                set in
+
+                <select id="setting-select" name="setting">
+                {% for setting in options.settings %}
+                    <option value="{{ setting }}">{{ setting }}</option>
+                {% endfor %}
+                </select>.
+
+
+            </p>
+            <div class="save-row">
+                <span class="save-status" id="save-status"></span>
+                <button type="submit" class="btn">Submit</button>
+            </div>
+            </form>
+        </div>
+
+
+        <!-- Top-right: short story from the BASIC prompt
+        -------------------------------------------------------------------------------- -->
+        <div class="grid-item">
+            <div class="grid-subtitle">Basic Image</div>
+            <div class="grid-box output" id="basic-story-output">[story from the basic prompt]</div>
+        </div>
+
+
+        <!-- Bottom-left: shows the filled-in ad-lib after submit 
+         -------------------------------------------------------------------------------- -->
+        <div class="grid-item row-refined">
+            <div class="grid-subtitle">Let's tell the AI to refine the prompt!</div>
+            <div class="grid-box output" id="submission-output">
+            Your prompt will appear here.
+            </div>
+        </div>
+
+
+        <!-- Bottom-right: short story from the REFINED prompt 
+         -------------------------------------------------------------------------------- -->
+        <div class="grid-item row-refined">
+            <div class="grid-subtitle">Refined Image</div>
+            <div class="grid-box output" id="refined-story-output">[story from the refined prompt]</div>
+        </div>
+
+    </div>
+
+
+  </main>
+
+
+
+  <!-- ================================================================================ -->
+  <!-- FOOTER -->
+  <!-- ================================================================================ -->
+  <footer>
+    <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
+      <img src="{{ url_for('static', filename='commun-ai-ty_logo_white.png') }}" alt="Commun-AI-ty">
+    </a>
+    <div class="footer-links">
+      <a href="mailto:commun-ai-ty@umich.edu">Contact</a>
+    </div>
+    <div class="footer-copy">© 2026 Commun-AI-ty · University of Michigan</div>
+  </footer>
+
+
+
+  <!-- image-mode combo, handed from Flask as JSON (parsed by the script below) -->
+  <script type="application/json" id="image-mode-data">{{ image_mode | tojson }}</script>
+
+  <!-- ================================================================================
+       SAVE FORM (routes data to Flask; prevents page reload)
+  ================================================================================ -->
+  <script>
+    // Locate elements
+    const form            = document.getElementById("save-form");
+    const characterSelect = document.getElementById("character-select");
+    const styleSelect     = document.getElementById("style-select");
+    const settingSelect   = document.getElementById("setting-select");
+    const status          = document.getElementById("save-status");
+    const button          = form.querySelector("button");
+    const output          = document.getElementById("submission-output");
+    const basicStory      = document.getElementById("basic-story-output");
+    const refinedStory    = document.getElementById("refined-story-output");
+
+    // Mode toggle (Text <-> Image)
+    const modeSwitch = document.getElementById("mode-switch");
+    const modeHint   = document.getElementById("mode-hint");
+    const switchOpts = modeSwitch.querySelectorAll(".switch-opt");
+    const selects    = [characterSelect, styleSelect, settingSelect];
+    const IMAGE_MODE = JSON.parse(document.getElementById("image-mode-data").textContent);   // locked combo for image mode
+    let currentMode  = "text";
+
+    function setMode(mode) {
+      currentMode = mode;
+      switchOpts.forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+
+      // Image mode allows only one fixed ad-lib combo -> lock the dropdowns to it
+      const lock = (mode === "image");
+      if (lock) {
+        characterSelect.value = IMAGE_MODE.character;
+        styleSelect.value     = IMAGE_MODE.style;
+        settingSelect.value   = IMAGE_MODE.setting;
+      }
+      selects.forEach(s => s.disabled = lock);
+      modeHint.textContent = lock
+        ? "Image mode uses one fixed prompt + premade images."
+        : "";
+    }
+
+    switchOpts.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+    // Listener for the submit button
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();              // stop the normal page reload
+
+      const character = characterSelect.value;
+      const style     = styleSelect.value;
+      const setting   = settingSelect.value;
+
+      button.disabled = true;
+      status.className = "save-status";
+      status.textContent = "Submitting...";
+
+      try {
+        const response = await fetch("{{ url_for('form_app.save') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: currentMode, character, style, setting }),
+        });
+        const data = await response.json();
+
+        if (response.ok && data.ok) {
+          status.className = "save-status ok";
+          status.textContent = "Done!";
+          output.textContent = data.prompt_text;            // refined prompt -> bottom-left (both modes)
+
+          if (data.mode === "image") {
+            // image mode: show the premade images instead of stories
+            basicStory.innerHTML   = `<img src="${data.basic_image}" alt="Basic image">`;
+            refinedStory.innerHTML = `<img src="${data.refined_image}" alt="Refined image">`;
+          } else {
+            // text mode: show the generated short stories
+            basicStory.textContent   = data.basic_story;    // story from basic prompt -> top-right
+            refinedStory.textContent = data.refined_story;  // story from refined prompt -> bottom-right
+          }
+
+        } else {
+          status.className = "save-status err";
+          status.textContent = data.error || "Something went wrong.";
+        }
+
+      } catch (err) {
+        status.className   = "save-status err";
+        status.textContent = "Network error — is the server running?";
+      } finally { button.disabled = false }
+    });
+
+  </script>
+</body>
+</html>
