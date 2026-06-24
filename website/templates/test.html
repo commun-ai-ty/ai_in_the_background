@@ -20,6 +20,7 @@
       --muted:     #6B8F89;
       --card-bg:   #FFFFFF;
       --border:    rgba(13,158,138,0.15);
+      --gray:      #CFCFCF;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,7 +185,7 @@
     .grid-item .grid-box { flex: 1; }
     /* the little subtitle ABOVE each box */
     .grid-subtitle {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Arial', sans-serif;
       font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; color: var(--teal-dk);
     }
@@ -201,6 +202,15 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .grid-box:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(13,158,138,0.35); }
+
+    /* boxes that hold generated text: top-aligned, left-aligned, scroll if long */
+    .grid-box.preview {
+      align-items: flex-start; justify-content: flex-start;
+      font-style: italic; color: var(--gray);
+      text-align: left; overflow-y: auto;
+      font-size: 1.25rem; line-height: 1.6;
+
+    }
 
     /* boxes that hold generated text: top-aligned, left-aligned, scroll if long */
     .grid-box.output {
@@ -287,9 +297,127 @@
     .footer-links a:hover { color: var(--teal-lt); }
     .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
 
+    /* ── AVATAR GUIDE (on the bottom-left tile) ── */
+    .avatar-host { position: relative; }
+    /* tile must sit ABOVE the avatar so the robot peeks from behind its corner */
+    .avatar-host .grid-box { position: relative; z-index: 1; }
+    .avatar-img {
+      position: absolute; top: 0; left: 0;
+      width: 192px; height: auto;
+      transform: translate(-86px, -36px);
+      z-index: 2;                       /* behind the tile */
+      pointer-events: none;
+      filter: drop-shadow(0 8px 14px rgba(14,31,28,0.22));
+    }
+    /* speech bubble (near his mouth) + info button to its right */
+    .avatar-speech {
+      position: absolute; top: 0; left: 0;
+      transform: translate(55px, -20px);
+      display: flex; align-items: center; gap: 0.5rem;
+      z-index: 6;                       /* above the tile */
+    }
+
+    .speech-bubble {
+      position: relative;
+      background: #fff; color: var(--text);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 0.55rem 0.85rem; font-size: 0.8rem; font-weight: 500;
+      line-height: 1.35; max-width: 215px;
+      box-shadow: 0 8px 22px rgba(14,31,28,0.14);
+    }
+    /* little tail pointing left toward the robot's mouth */
+    .speech-bubble::before {
+      content: ''; position: absolute;
+      left: -7px; top: 50%; transform: translateY(-50%);
+      border-width: 6px 7px 6px 0; border-style: solid;
+      border-color: transparent #fff transparent transparent;
+    }
+    .info-btn {
+      flex-shrink: 0;
+      width: 24px; height: 24px; border-radius: 50%;
+      border: none; cursor: pointer;
+      background: var(--teal); color: #fff;
+      font-family: 'Arial', sans-serif; font-weight: 800; font-size: 0.85rem; font-style: normal;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(13,158,138,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .info-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(13,158,138,0.45); }
+
+
+
+
+    /* ── FLOW ARROWS (left column -> right column) ── */
+    .flow-arrow {
+      position: absolute; left: 50%; z-index: 5;
+      transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      pointer-events: none;
+    }
+    .flow-arrow-top    { top: 30%; }
+    .flow-arrow-bottom { top: 80%; }
+    .flow-caption {
+      font-family: 'Syne', sans-serif; font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase; color: var(--teal-dk);
+      background: var(--cream); padding: 2px 7px; border-radius: 100px;
+      white-space: nowrap; box-shadow: 0 2px 6px rgba(14,31,28,0.12);
+      display: none;
+    }
+    .flow-line {
+      width: 16px; height: 0; border-top: 2px solid var(--teal-dk);
+      position: relative; opacity: 0.85;
+    }
+    .flow-line::after {   /* arrowhead */
+      content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
+      border-style: solid; border-width: 5px 0 5px 8px;
+      border-color: transparent transparent transparent var(--teal-dk);
+    }
+
+
+
+
+
+
+
+    /* ── MODAL (info: how refinement works) ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(14,31,28,0.55); backdrop-filter: blur(3px);
+      padding: 2rem;
+    }
+    .modal-overlay[hidden] { display: none; }
+    .modal {
+      position: relative; background: #fff; border-radius: 20px;
+      max-width: 520px; width: 100%; padding: 2.25rem;
+      box-shadow: 0 24px 70px rgba(14,31,28,0.3);
+      animation: modalIn 0.25s ease both;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 34px; height: 34px; border-radius: 50%;
+      border: none; cursor: pointer; background: var(--cream); color: var(--muted);
+      font-size: 1.4rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .modal-close:hover { background: rgba(13,158,138,0.1); color: var(--teal-dk); }
+    .modal-title {
+      font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+      color: var(--dark); letter-spacing: -0.5px; margin-bottom: 1rem; padding-right: 2rem;
+    }
+    .modal-body p { font-size: 0.92rem; line-height: 1.7; color: var(--text); margin-bottom: 0.9rem; }
+    .modal-body p:last-child { margin-bottom: 0; }
+    .modal-body strong { color: var(--teal-dk); }
+
     @media (max-width: 900px) {
       nav { padding: 0 1.5rem; }
       .workspace { padding: calc(68px + 1.5rem) 1.5rem 2rem; }
+    }
+    /* arrows assume a 2-column layout; hide when the grid collapses to one column */
+    @media (max-width: 600px) {
+      .flow-arrow { display: none; }
     }
   </style>
 </head>
@@ -373,26 +501,52 @@
         <!-- Top-right: short story from the BASIC prompt
         -------------------------------------------------------------------------------- -->
         <div class="grid-item">
-            <div class="grid-subtitle">Basic Image</div>
-            <div class="grid-box output" id="basic-story-output">[story from the basic prompt]</div>
-        </div>
-
-
-        <!-- Bottom-left: shows the filled-in ad-lib after submit 
-         -------------------------------------------------------------------------------- -->
-        <div class="grid-item row-refined">
-            <div class="grid-subtitle">Let's tell the AI to refine the prompt!</div>
-            <div class="grid-box output" id="submission-output">
-            Your prompt will appear here.
+            <div class="grid-subtitle">Original</div>
+            <div class="grid-box preview" id="basic-story-output">
+               &lt;Result from the original prompt&gt;
             </div>
         </div>
 
 
-        <!-- Bottom-right: short story from the REFINED prompt 
+        <!-- Bottom-left: shows the filled-in ad-lib after submit
+         -------------------------------------------------------------------------------- -->
+        <div class="grid-item row-refined avatar-host">
+            <!-- avatar peeking from behind the tile's top-left corner -->
+            <img class="avatar-img" src="{{ url_for('static', filename='robot.png') }}" alt="Guide robot">
+
+
+            <!-- speech bubble near his mouth + info button to the right -->
+            <div class="avatar-speech">
+                <div class="speech-bubble">Let's tell the AI to refine our prompt!</div>
+                <button type="button" class="info-btn" id="refine-info-btn" aria-label="How does refinement work?">i</button>
+            </div>
+            <div class="grid-subtitle"> hidden </div>
+            <div class="grid-box preview" id="submission-output">
+                &lt;AI internal thinking process&gt;
+            </div>
+        </div>
+
+
+        <!-- Bottom-right: short story from the REFINED prompt
          -------------------------------------------------------------------------------- -->
         <div class="grid-item row-refined">
-            <div class="grid-subtitle">Refined Image</div>
-            <div class="grid-box output" id="refined-story-output">[story from the refined prompt]</div>
+            <div class="grid-subtitle">Refined</div>
+            <div class="grid-box preview" id="refined-story-output">
+                &lt;AI-refined result&gt;
+            </div>
+        </div>
+
+
+
+        <!-- arrows pointing from the left column to the right column (one per row) -->
+        <div class="flow-arrow flow-arrow-top" aria-hidden="true">
+            <span class="flow-caption">generating</span>
+            <span class="flow-line"></span>
+        </div>
+
+        <div class="flow-arrow flow-arrow-bottom" aria-hidden="true">
+            <span class="flow-caption">generating</span>
+            <span class="flow-line"></span>
         </div>
 
     </div>
@@ -414,6 +568,30 @@
     </div>
     <div class="footer-copy">© 2026 Commun-AI-ty · University of Michigan</div>
   </footer>
+
+  <!-- ================================================================================ -->
+  <!-- INFO MODAL: how prompt refinement works -->
+  <!-- ================================================================================ -->
+  <div class="modal-overlay" id="refine-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="refine-modal-title">
+      <button type="button" class="modal-close" id="refine-modal-close" aria-label="Close">&times;</button>
+      <h2 class="modal-title" id="refine-modal-title">How prompt refinement works</h2>
+      <div class="modal-body">
+        <p>
+          When you hit <strong>Submit</strong>, your basic ad-lib prompt is first sent to an AI model
+          with special instructions to <strong>rewrite it into a richer, more detailed prompt</strong>.
+        </p>
+        <p>
+          The model adds specifics — subject details, style, lighting, mood, composition — that a basic
+          prompt leaves out. That expanded version is the <strong>Refined Prompt</strong> shown in this box.
+        </p>
+        <p>
+          We then generate a result from <em>both</em> versions so you can compare: the top row uses your
+          basic prompt, and the bottom row uses the refined one.
+        </p>
+      </div>
+    </div>
+  </div>
 
 
 
@@ -495,6 +673,9 @@
             // text mode: show the generated short stories
             basicStory.textContent   = data.basic_story;    // story from basic prompt -> top-right
             refinedStory.textContent = data.refined_story;  // story from refined prompt -> bottom-right
+
+            basicStory  .className = "grid-box output";
+            refinedStory.className = "grid-box output";
           }
 
         } else {
@@ -507,6 +688,21 @@
         status.textContent = "Network error — is the server running?";
       } finally { button.disabled = false }
     });
+
+    // Info modal: how refinement works
+    const infoBtn   = document.getElementById("refine-info-btn");
+    const infoModal = document.getElementById("refine-modal");
+    const infoClose = document.getElementById("refine-modal-close");
+
+    const openModal  = () => { infoModal.hidden = false; };
+    const closeModal = () => { infoModal.hidden = true; };
+
+    infoBtn.addEventListener("click", openModal);
+    infoClose.addEventListener("click", closeModal);
+    // close when clicking the dark backdrop (but not the dialog itself)
+    infoModal.addEventListener("click", (e) => { if (e.target === infoModal) closeModal(); });
+    // close on Escape
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !infoModal.hidden) closeModal(); });
 
   </script>
 </body>

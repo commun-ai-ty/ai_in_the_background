@@ -10,9 +10,9 @@ Configurable constants for the app.
 # Ad-lib dropdown options  (edit these lists to change the dropdown choices)
 # ================================================================================
 ADLIB_OPTIONS = {
-    "characters": ["Harry Potter", "Sherlock Holmes", "Mario", "Wonder Woman"],
-    "styles":     ["Balenciaga", "Van Gogh", "Studio Ghibli", "Cyberpunk"],
-    "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village"],
+    "characters": ["Harry Potter", "Bluey", "Sherlock Holmes", "Mario", "Wonder Woman"],
+    "styles":     ["Balenciaga", "a Mystery Novel", "Medieval", "Cyberpunk"],
+    "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village", "University of Michigan"],
 }
 
 
