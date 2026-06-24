@@ -4,14 +4,15 @@ Helper code for querying the APIs & for refining prompts.
 `website.prompting`
 
 """
-from groq import Groq
+from groq   import Groq
+from openai import OpenAI
 
 # Internal app code
 from website.config import SYSTEM_PROMPT_TEXT
 
 # Re-usable client -- TODO: Maybe the key goes here?
-client = Groq()
-
+client        = Groq()
+client_images = OpenAI() 
 
 # ================================================================================
 # Stage 1: Prompt Refinement (simulating the "thinking" stage)
@@ -43,21 +44,11 @@ def refine_prompt(base_prompt: str, system_prompt: str = SYSTEM_PROMPT_TEXT) -> 
 # TODO: Currently does not work -- no image generation model API available
 def generate_ai_image(base_prompt: str) -> str:
     # Format the LLM query
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": "Write me a one paragraph short story based on this prompt."},
-            {"role": "user",   "content": base_prompt}, # User message to respond to
-        ],
-
-        # The language model which will generate the completion
-        model="llama-3.3-70b-versatile",
-
-        # Max tokens (length) of the response
-        max_completion_tokens=512,
+    response = client.responses.create(
+        model="gpt-5.5",
+        input=base_prompt,
+        tools=[{"type": "image_generation"}],
     )
-
-    # Get the response and return it
-    response = chat_completion.choices[0].message.content
     return response
 
 
