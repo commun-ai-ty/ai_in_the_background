@@ -136,6 +136,29 @@
     .btn-ghost:hover { background: rgba(13,158,138,0.08); }
 
     /* -------------------------------------------------------------------------------- */
+    /* Toolbar row (mode toggle on the left, app headline on the right)                 */
+    /* -------------------------------------------------------------------------------- */
+    .toolbar-row {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; 
+      gap: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .toolbar-row .mode-toggle { margin-bottom: 0; }   /* the row owns the spacing now */
+    .app-headline {
+      font-family: 'Arial', sans-serif;
+      font-size: clamp(1.05rem, 2vw, 1.55rem);
+      font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;
+      color: var(--dark); text-align: right;
+    }
+    .app-headline em { font-style: normal; color: var(--orange); }
+
+    /* stack the row on narrow screens */
+    @media (max-width: 760px) {
+      .toolbar-row { flex-direction: column; align-items: flex-start; }
+      .app-headline { text-align: left; }
+    }
+
+    /* -------------------------------------------------------------------------------- */
     /* Mode Toggle                                                                      */
     /* -------------------------------------------------------------------------------- */
     .mode-toggle {
@@ -363,15 +386,24 @@
     }
     .info-btn {
       flex-shrink: 0;
-      width: 24px; height: 24px; border-radius: 50%;
+      display: inline-flex; align-items: center; gap: 0.4rem;
       border: none; cursor: pointer;
       background: var(--teal); color: #fff;
-      font-family: 'Arial', sans-serif; font-weight: 800; font-size: 0.85rem; font-style: normal;
-      display: flex; align-items: center; justify-content: center;
+      padding: 0.25rem 0.8rem 0.25rem 0.3rem;   /* tighter on the icon side */
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.8rem;
       box-shadow: 0 4px 12px rgba(13,158,138,0.35);
       transition: transform 0.15s, box-shadow 0.15s;
     }
     .info-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(13,158,138,0.45); }
+    /* circled "i" on the left */
+    .info-btn .info-icon {
+      flex-shrink: 0;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; color: var(--teal-dk);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Arial', sans-serif; font-weight: 800; font-size: 0.78rem; font-style: italic;
+    }
 
 
     /* ================================================================================ */
@@ -540,15 +572,23 @@
     <main class="workspace">
 
         <!-- -------------------------------------------------------------------------------- -->
-        <!-- Generation Mode Toggle (Text <-> Image)                                          -->
+        <!-- Toolbar row: mode toggle (left) + app headline (right)                           -->
         <!-- -------------------------------------------------------------------------------- -->
-        <div class="mode-toggle">
-            <span class="mode-label">Mode</span>
-            <div class="switch" id="mode-switch">
-                <button type="button" class="switch-opt active" data-mode="text" >Text </button>
-                <button type="button" class="switch-opt"        data-mode="image">Image</button>
+        <div class="toolbar-row">
+
+            <!-- Generation Mode Toggle (Text <-> Image) -->
+            <div class="mode-toggle">
+                <span class="mode-label">Mode</span>
+                <div class="switch" id="mode-switch">
+                    <button type="button" class="switch-opt active" data-mode="text" >Text </button>
+                    <button type="button" class="switch-opt"        data-mode="image">Image</button>
+                </div>
+                <span class="mode-hint" id="mode-hint"></span>
             </div>
-            <span class="mode-hint" id="mode-hint"></span>
+
+            <!-- Brief app overview -->
+            <h1 class="app-headline">Help teach an AI how to <em>"think"</em> through a problem!</h1>
+
         </div>
 
     <!-- ================================================================================ -->
@@ -629,7 +669,10 @@
             <!-- Speech bubble near his mouth + info button to the right -->
             <div class="avatar-speech">
                 <div class="speech-bubble">Let's tell the AI to refine our prompt!</div>
-                <button type="button" class="info-btn" id="refine-info-btn" aria-label="How does refinement work?">i</button>
+                <button type="button" class="info-btn" id="refine-info-btn" aria-label="Customize the refinement">
+                    <span class="info-icon" aria-hidden="true">i</span>
+                    <span class="info-label">Customize</span>
+                </button>
             </div>
 
             <!-- Subtitle & text-box -->
