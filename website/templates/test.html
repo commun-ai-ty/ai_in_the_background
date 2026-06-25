@@ -990,18 +990,19 @@
 
         button.disabled = true;
         status.className = "save-status";
+        let completionStatus = null;
 
         try {
             // --------------------------------------------------------------------------------
             // IMAGE MODE: three sequential stages; each box spins (with a timer) then fills
             // --------------------------------------------------------------------------------
             if (currentMode === "image") {
-
                 // Stage 1: image from the basic prompt -> top-right
                 status.textContent = "Generating basic image...";
                 setLoading(basicStory, "Generating basic image");
                 startTimer();
                 const s1 = await postJSON(URL_BASIC_IMAGE, combo);
+                if (s1.notice) completionStatus = s1.notice;
                 basicStory.innerHTML = `<img src="${s1.image}" alt="Basic image">`;
 
                 // Stage 2: refine the prompt -> bottom-left
@@ -1019,6 +1020,7 @@
                 setLoading(refinedStory, "Generating refined image");
                 startTimer();
                 const s3 = await postJSON(URL_REFINED_IMAGE, { ...combo, refined_prompt: s2.refined_prompt });
+                if (s3.notice) completionStatus = s3.notice;
                 refinedStory.innerHTML = `<img src="${s3.image}" alt="Refined image">`;
             
             // --------------------------------------------------------------------------------
@@ -1053,7 +1055,7 @@
             // Request fully complete
             stopTimer();
             status.className = "save-status ok";
-            status.textContent = "Done!";
+            status.textContent = completionStatus || "Done!";
 
         // --------------------------------------------------------------------------------
         // On errors with the request

@@ -5,15 +5,31 @@ Helper code for querying the APIs & for refining prompts.
 
 """
 
+import os
+
 from groq import Groq
 from openai import OpenAI
 
 # Internal app code
 from website.config import SYSTEM_PROMPT_TEXT
 
-# Re-usable client -- TODO: Maybe the key can go here?
 client = Groq()
-client_images = OpenAI()
+_client_images = None
+
+
+def is_live_image_generation_available() -> bool:
+    """True when OPENAI_API_KEY is set (live image generation is enabled)."""
+    return bool(os.environ.get("OPENAI_API_KEY", "").strip())
+
+
+def _get_images_client() -> OpenAI:
+    global _client_images
+    if _client_images is None:
+        if not is_live_image_generation_available():
+            raise RuntimeError("OPENAI_API_KEY is not configured")
+        _client_images = OpenAI()
+    return _client_images
+
 
 # Give up on an image request after this many seconds (so it can't hang forever)
 IMAGE_TIMEOUT = 240
@@ -59,11 +75,15 @@ def generate_ai_image(base_prompt: str) -> str:
     page can show the real reason instead of a broken image.
     """
     # gpt-image-* returns base64 by default (no response_format param)
-    response = client_images.with_options(timeout=IMAGE_TIMEOUT).images.generate(
-        model=IMAGE_MODEL,
-        prompt=base_prompt,
-        n=1,  # Number of images to generate
-        size="1024x1024",
+    response = (
+        _get_images_client()
+        .with_options(timeout=IMAGE_TIMEOUT)
+        .images.generate(
+            model=IMAGE_MODEL,
+            prompt=base_prompt,
+            n=1,  # Number of images to generate
+            size="1024x1024",
+        )
     )
 
     # response.data[0].b64_json is the base64-encoded PNG

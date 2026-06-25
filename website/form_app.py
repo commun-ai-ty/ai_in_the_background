@@ -18,8 +18,16 @@ from website.config import (
 )
 
 # Internal app code
-from website.prompting import generate_ai_image, generate_short_story
+from website.prompting import (
+    generate_ai_image,
+    generate_short_story,
+    is_live_image_generation_available,
+)
 from website.structured_generation import structured_refine
+
+PREMADE_FALLBACK_NOTICE = (
+    "Live image generation is not configured; showing sample images."
+)
 
 # --------------------------------------------------------------------------------
 # Create & route the Flask app
@@ -94,6 +102,41 @@ def _clean_fields(raw, default):
     return cleaned or default
 
 
+def _premade_image(stage: str) -> str:
+    """Return the static URL for a premade sample image (`basic` or `refined`)."""
+    filename = (
+        IMAGE_MODE["basic_image"] if stage == "basic" else IMAGE_MODE["refined_image"]
+    )
+    return url_for("static", filename=filename)
+
+
+def _resolve_image(
+    stage: str, prompt_text: str, character: str, style: str, setting: str
+):
+    """
+    Pick a basic/refined image URL and any extra JSON fields for the response.
+
+    Uses premade samples for the default ad-lib combo, or when OPENAI_API_KEY is
+    unset. Otherwise calls the OpenAI image API. Returns (image_url, extras, error).
+    """
+    if _is_default_combo(character, style, setting):
+        return _premade_image(stage), {"image_source": "premade"}, None
+
+    if not is_live_image_generation_available():
+        return (
+            _premade_image(stage),
+            {"image_source": "premade_fallback", "notice": PREMADE_FALLBACK_NOTICE},
+            None,
+        )
+
+    image, err = _safe_call(
+        generate_ai_image, prompt_text, label=f"{stage} image generation"
+    )
+    if err:
+        return None, {}, err
+    return image, {"image_source": "generated"}, None
+
+
 # ================================================================================
 # [TEXT MODE] One-shot: refine the prompt + generate two short stories
 # ================================================================================
@@ -146,7 +189,8 @@ def save():
 # ================================================================================
 # [IMAGE MODE] Staged generation -- the page calls these 3 routes in order
 # ================================================================================
-# NOTE: The default combo returns the premade /static images instead of generating
+# NOTE: Premade /static images are used for the default combo, or whenever
+# OPENAI_API_KEY is not set (see _resolve_image).
 
 
 # --------------------------------------------------------------------------------
@@ -161,23 +205,15 @@ def generate_basic_image():
     if (not character) or (not style) or (not setting):
         return jsonify({"ok": False, "error": "Please choose all options"}), 400
 
-    # Check if we should use the default image or new ones
-    if _is_default_combo(character, style, setting):
-        image = url_for("static", filename=IMAGE_MODE["basic_image"])  # premade sample
-
-    # Generate the basic image
-    else:
-        prompt_text = f" {character} {style} {setting}"
-        image, err = _safe_call(
-            generate_ai_image, prompt_text, label="basic image generation"
+    prompt_text = f" {character} {style} {setting}"
+    image, extras, err = _resolve_image("basic", prompt_text, character, style, setting)
+    if err:
+        return (
+            jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
+            502,
         )
-        if err:
-            return (
-                jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
-                502,
-            )
 
-    return jsonify({"ok": True, "image": image})
+    return jsonify({"ok": True, "image": image, **extras})
 
 
 # --------------------------------------------------------------------------------
@@ -223,20 +259,18 @@ def generate_refined_image():
     character, style, setting = _adlib_fields(data)
     refined_prompt = (data.get("refined_prompt") or "").strip()
 
-    if _is_default_combo(character, style, setting):
-        image = url_for(
-            "static", filename=IMAGE_MODE["refined_image"]
-        )  # premade sample
-    else:
-        if not refined_prompt:
+    if not refined_prompt and not _is_default_combo(character, style, setting):
+        if is_live_image_generation_available():
             return jsonify({"ok": False, "error": "Missing refined prompt"}), 400
-        image, err = _safe_call(
-            generate_ai_image, refined_prompt, label="refined image generation"
-        )
-        if err:
-            return (
-                jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
-                502,
-            )
+        refined_prompt = f" {character} {style} {setting}"
 
-    return jsonify({"ok": True, "image": image})
+    image, extras, err = _resolve_image(
+        "refined", refined_prompt, character, style, setting
+    )
+    if err:
+        return (
+            jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
+            502,
+        )
+
+    return jsonify({"ok": True, "image": image, **extras})
