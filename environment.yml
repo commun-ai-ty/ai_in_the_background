@@ -17,5 +17,6 @@ dependencies:
   - uvicorn
   - python-dotenv
   - pip
+  - gunicorn
   - pip:
     - xai-sdk
