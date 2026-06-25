@@ -72,12 +72,16 @@ def structured_refine(base_prompt: str, system_prompt: str, fields: list[dict]) 
     """
     schema, names = build_schema(fields)
 
+    # Manual override option for a demo
+    use_prompt = base_prompt
+    # "Draw a picture of an atom"
+
     # Format the structured query (same message shape as the Groq refine call)
     completion = client.chat.completions.parse(
         # Request content
         messages=[
             {"role": "system", "content": system_prompt}, # System Prompt (text vs image)
-            {"role": "user",   "content":   base_prompt}, # User message to respond to
+            {"role": "user",   "content":   use_prompt}, # User message to respond to
         ],
 
         # The language model which will generate the completion
