@@ -171,6 +171,25 @@
       object-fit: contain; border-radius: 10px;
     }
 
+    /* ── LOADING STATE (spinner + live timer inside a box) ── */
+    .loading {
+      flex: 1; align-self: stretch;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.65rem; color: #fff;
+    }
+    .spinner {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label { font-size: 0.85rem; font-weight: 600; opacity: 0.95; }
+    .loading-timer {
+      font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800;
+      letter-spacing: 0.02em; opacity: 0.85;
+    }
+
     /* ── 2x2 GRID OF BOXES ── */
     .grid-2x2 {
       position: relative; z-index: 1;
@@ -408,7 +427,7 @@
     }
     .modal-close:hover { background: rgba(13,158,138,0.1); color: var(--teal-dk); }
     .modal-title {
-      font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+      font-family: 'Arial', sans-serif; font-size: 1.5rem; font-weight: 800;
       color: var(--dark); letter-spacing: -0.5px; margin-bottom: 1rem; padding-right: 2rem;
     }
     .modal-body p { font-size: 0.92rem; line-height: 1.7; color: var(--text); margin-bottom: 0.9rem; }
@@ -460,13 +479,15 @@
     <div class="grid-2x2">
 
         <!-- Top-left: ad-lib with two dropdowns 
-         --------------------------------------------------------------------------------  -->
+         -------------------------------------------------------------------------------- 
+         Write me a one paragraph short story about 
+         -->
         <div class="grid-item">
             <div class="grid-subtitle">Design your prompt!</div>
             <form class="grid-box editable" id="save-form">
             <p class="adlib">
 
-                Write me a one paragraph short story about 
+                Draw me an image with 
 
                 <select id="character-select" name="character">
                 {% for character in options.characters %}
@@ -579,7 +600,9 @@
   <div class="modal-overlay" id="refine-modal" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="refine-modal-title">
       <button type="button" class="modal-close" id="refine-modal-close" aria-label="Close">&times;</button>
-      <h2 class="modal-title" id="refine-modal-title">How prompt refinement works</h2>
+      
+      <h2 class="modal-title" id="refine-modal-title">How AI models "think" in the background</h2>
+
       <div class="modal-body">
         <p>
           When you hit <strong>Submit</strong>, your basic ad-lib prompt is first sent to an AI model
@@ -599,114 +622,210 @@
 
 
 
-  <!-- image-mode combo, handed from Flask as JSON (parsed by the script below) -->
-  <script type="application/json" id="image-mode-data">{{ image_mode | tojson }}</script>
-
-  <!-- ================================================================================
-       SAVE FORM (routes data to Flask; prevents page reload)
-  ================================================================================ -->
+ 
   <script>
-    // Locate elements
+    // ================================================================================
+    // "Save" Form Script -- routes data to Flask in the backend + prevents reload
+    // ================================================================================
+    // Locate elements from the page
     const form            = document.getElementById("save-form");
     const characterSelect = document.getElementById("character-select");
     const styleSelect     = document.getElementById("style-select");
     const settingSelect   = document.getElementById("setting-select");
     const status          = document.getElementById("save-status");
-    const button          = form.querySelector("button");
     const output          = document.getElementById("submission-output");
     const basicStory      = document.getElementById("basic-story-output");
     const refinedStory    = document.getElementById("refined-story-output");
+    const button          = form.querySelector("button");
 
-    // Mode toggle (Text <-> Image)
+    // Backend endpoints
+    const URL_SAVE          = "{{ url_for('form_app.save') }}";                    // text mode (one shot)
+    const URL_BASIC_IMAGE   = "{{ url_for('form_app.generate_basic_image') }}";    // image stage 1
+    const URL_REFINE        = "{{ url_for('form_app.refine_prompt_stage') }}";     // image stage 2
+    const URL_REFINED_IMAGE = "{{ url_for('form_app.generate_refined_image') }}";  // image stage 3
+
+    // --------------------------------------------------------------------------------
+    // Mode toggle (Text vs. Image)
+    // --------------------------------------------------------------------------------
+    // Default setting is "text" mode
     const modeSwitch = document.getElementById("mode-switch");
     const modeHint   = document.getElementById("mode-hint");
     const switchOpts = modeSwitch.querySelectorAll(".switch-opt");
-    const selects    = [characterSelect, styleSelect, settingSelect];
-    const IMAGE_MODE = JSON.parse(document.getElementById("image-mode-data").textContent);   // locked combo for image mode
     let currentMode  = "text";
 
+    // Toggle the mode between text and images
     function setMode(mode) {
-      currentMode = mode;
-      switchOpts.forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
-
-      // Image mode allows only one fixed ad-lib combo -> lock the dropdowns to it
-      const lock = (mode === "image");
-      if (lock) {
-        characterSelect.value = IMAGE_MODE.character;
-        styleSelect.value     = IMAGE_MODE.style;
-        settingSelect.value   = IMAGE_MODE.setting;
-      }
-      selects.forEach(s => s.disabled = lock);
-      modeHint.textContent = lock
-        ? "Image mode uses one fixed prompt + premade images."
+        currentMode = mode;
+        switchOpts.forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+        modeHint.textContent = (mode === "image")
+        ? "Image mode generates real images. The default combo uses ready-made samples."
         : "";
     }
-
     switchOpts.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
-    // Listener for the submit button
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();              // stop the normal page reload
-
-      const character = characterSelect.value;
-      const style     = styleSelect.value;
-      const setting   = settingSelect.value;
-
-      button.disabled = true;
-      status.className = "save-status";
-      status.textContent = "Submitting...";
-
-      try {
-        const response = await fetch("{{ url_for('form_app.save') }}", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: currentMode, character, style, setting }),
-        });
-        const data = await response.json();
-
-        if (response.ok && data.ok) {
-          status.className = "save-status ok";
-          status.textContent = "Done!";
-          output.textContent = data.prompt_text;            // refined prompt -> bottom-left (both modes)
-
-          if (data.mode === "image") {
-            // image mode: show the premade images instead of stories
-            basicStory.innerHTML   = `<img src="${data.basic_image}" alt="Basic image">`;
-            refinedStory.innerHTML = `<img src="${data.refined_image}" alt="Refined image">`;
-          } else {
-            // text mode: show the generated short stories
-            basicStory.textContent   = data.basic_story;    // story from basic prompt -> top-right
-            refinedStory.textContent = data.refined_story;  // story from refined prompt -> bottom-right
-
-            basicStory  .className = "grid-box output";
-            refinedStory.className = "grid-box output";
-          }
-
-        } else {
-          status.className = "save-status err";
-          status.textContent = data.error || "Something went wrong.";
+    // --------------------------------------------------------------------------------
+    // POST JSON helper
+    // --------------------------------------------------------------------------------
+    // Resolves to the parsed body & logs the problem to the console
+    async function postJSON(url, payload) {
+        // Initial query
+        let res;
+        try {
+            res = await fetch(url, {
+                method  : "POST", 
+                headers : { "Content-Type": "application/json" },
+                body    : JSON.stringify(payload),
+            });
+        } catch (networkErr) { 
+            console.error(`[generation] network error on POST ${url}`, networkErr);
+            throw new Error("Network error - is the server running?");
         }
 
-      } catch (err) {
-        status.className   = "save-status err";
-        status.textContent = "Network error — is the server running?";
-      } finally { button.disabled = false }
+        // Data parsing
+        let data;
+        try { data = await res.json(); } catch (parseErr) {
+            console.error(`[generation] non-JSON response from POST ${url} (HTTP ${res.status})`, parseErr);
+            throw new Error("Unexpected server response — see console.");
+        }
+
+        // Final guard before returning
+        if (!res.ok || !data.ok) {
+            console.error(`[generation] failed POST ${url} (HTTP ${res.status})`, data);
+            throw new Error(data.error || "Something went wrong — see console.");
+        }
+        return data;
+    }
+
+    // --------------------------------------------------------------------------------
+    // Loading spinner + live timer (works with all `.loading-timer` elements on page)
+    // --------------------------------------------------------------------------------
+    let timerInterval = null;
+    function startTimer() {
+        stopTimer();
+        const start = Date.now();
+        timerInterval = setInterval(() => {
+            const txt = ((Date.now() - start) / 1_000).toFixed(1) + "s";
+            document.querySelectorAll(".loading-timer").forEach(el => { el.textContent = txt; });
+        }, 100);
+    }
+    function stopTimer() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+    function setLoading(box, label) {
+        box.innerHTML =
+        `<div class="loading">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="loading-label">${label}</span>
+            <span class="loading-timer">0.0s</span>
+            </div>`;
+    }
+
+    // ================================================================================
+    // Listener for the submit button
+    // ================================================================================
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();  // stop the normal page reload
+
+        const combo = {
+            character: characterSelect.value,
+            style:     styleSelect    .value,
+            setting:   settingSelect  .value,
+        };
+
+        button.disabled = true;
+        status.className = "save-status";
+
+        try {
+            // --------------------------------------------------------------------------------
+            // IMAGE MODE: three sequential stages; each box spins (with a timer) then fills
+            // --------------------------------------------------------------------------------
+            if (currentMode === "image") {
+
+                // Stage 1: image from the basic prompt -> top-right
+                status.textContent = "Generating basic image...";
+                setLoading(basicStory, "Generating basic image");
+                startTimer();
+                const s1 = await postJSON(URL_BASIC_IMAGE, combo);
+                basicStory.innerHTML = `<img src="${s1.image}" alt="Basic image">`;
+
+                // Stage 2: refine the prompt -> bottom-left
+                status.textContent = "Refining the prompt...";
+                setLoading(output, "Refining the prompt");
+                startTimer();
+                const s2 = await postJSON(URL_REFINE, combo);
+                output.className = "grid-box output";
+                output.textContent = s2.refined_prompt;
+
+                // Stage 3: image from the refined prompt -> bottom-right
+                status.textContent = "Generating refined image...";
+                setLoading(refinedStory, "Generating refined image");
+                startTimer();
+                const s3 = await postJSON(URL_REFINED_IMAGE, { ...combo, refined_prompt: s2.refined_prompt });
+                refinedStory.innerHTML = `<img src="${s3.image}" alt="Refined image">`;
+            
+            // --------------------------------------------------------------------------------
+            // TEXT MODE: one shot (all three boxes wait together)
+            // --------------------------------------------------------------------------------
+            // TODO: Should maybe change this to also be in stages
+            } else {
+                // Start the loading hase
+                status.textContent = "Submitting...";
+                setLoading(output,       "Refining the prompt");
+                setLoading(basicStory,   "Writing the basic story");
+                setLoading(refinedStory, "Writing the refined story");
+                startTimer();
+
+                // Get data from the backend
+                const data = await postJSON(URL_SAVE, combo);
+
+                // Set the container text content
+                output      .textContent = data.prompt_text;     // refined prompt -> bottom-left
+                basicStory  .textContent = data.basic_story;     // story          -> top-right
+                refinedStory.textContent = data.refined_story;   // story          -> bottom-right
+
+                // Set the font style back to the "display" mode (default is placeholder)
+                output      .className = "grid-box output";
+                basicStory  .className = "grid-box output";
+                refinedStory.className = "grid-box output";
+            }
+
+            // Request fully complete
+            stopTimer();
+            status.className = "save-status ok";
+            status.textContent = "Done!";
+
+        // --------------------------------------------------------------------------------
+        // On errors with the request
+        // --------------------------------------------------------------------------------
+        } catch (err) {
+            stopTimer();
+            console.error("[generation] flow failed:", err);
+            // Any box still showing a spinner -> replace it with a short failure note
+            document.querySelectorAll(".grid-box .loading").forEach(el => {
+                el.closest(".grid-box").textContent = "⚠️ Failed - see console";
+            });
+            status.className   = "save-status err";
+            status.textContent = err.message || "Network error - is the server running?";
+        } finally { button.disabled = false; }
     });
 
-    // Info modal: how refinement works
+    // ================================================================================
+    // Info Modal (describe how the internal "thought" process works)
+    // ================================================================================
+    // Modal controls
     const infoBtn   = document.getElementById("refine-info-btn");
     const infoModal = document.getElementById("refine-modal");
     const infoClose = document.getElementById("refine-modal-close");
+    const  openModal = () => { infoModal.hidden = false; };
+    const closeModal = () => { infoModal.hidden = true;  };
 
-    const openModal  = () => { infoModal.hidden = false; };
-    const closeModal = () => { infoModal.hidden = true; };
-
-    infoBtn.addEventListener("click", openModal);
+    // Buttons
+    infoBtn  .addEventListener("click",  openModal);
     infoClose.addEventListener("click", closeModal);
-    // close when clicking the dark backdrop (but not the dialog itself)
-    infoModal.addEventListener("click", (e) => { if (e.target === infoModal) closeModal(); });
-    // close on Escape
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !infoModal.hidden) closeModal(); });
+
+    // Close on escape key or clicking anywhere in the dark background
+    infoModal.addEventListener("click",   (e) => { if (e.target ===              infoModal       ) closeModal(); });
+    document .addEventListener("keydown", (e) => { if (e.key    === "Escape" && !infoModal.hidden) closeModal(); });
 
   </script>
 </body>
