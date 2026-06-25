@@ -9,7 +9,4 @@ services:
       - APP_NAME="Home"
     ports:
       - 127.0.0.1:8050:8050
-    command:
-      - /opt/conda/envs/suprashare/bin/python
-      - -m
-      - website.app
+
