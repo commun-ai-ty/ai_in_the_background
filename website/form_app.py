@@ -35,7 +35,7 @@ PREMADE_FALLBACK_NOTICE = (
 form_app = Blueprint("form_app", __name__)
 
 
-@form_app.route("/test")
+@form_app.route("/")
 def test():
     # Hand the dropdown options + default structured-generation fields to the template
     return render_template(
