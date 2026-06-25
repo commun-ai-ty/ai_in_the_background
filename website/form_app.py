@@ -8,8 +8,9 @@ import traceback
 from flask import Blueprint, render_template, request, jsonify, url_for
 
 # Internal app code
-from website.prompting import refine_prompt, generate_ai_image, generate_short_story
-from website.config    import ADLIB_OPTIONS, IMAGE_MODE, SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
+from website.prompting             import generate_ai_image, generate_short_story
+from website.structured_generation import structured_refine, RefinedImagePrompt, RefinedStoryPrompt
+from website.config                import ADLIB_OPTIONS, IMAGE_MODE, SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
 
 
 # --------------------------------------------------------------------------------
@@ -73,8 +74,10 @@ def save():
     # Construct the prompt from the ad-lib
     prompt_text = f" {character} {style} {setting}"
 
-    # Generate the refined prompt
-    refined_prompt = refine_prompt(prompt_text, system_prompt=SYSTEM_PROMPT_TEXT)
+    # Refine the prompt with structured generation (-> RefinedStoryPrompt); use the combined final_prompt
+    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_TEXT, RefinedStoryPrompt, label="prompt refinement")
+    if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
+    refined_prompt = result.final_prompt
 
     # Generate a short story for each prompt
     basic_story   = generate_short_story(prompt_text)     # Top-right    -> uses the basic prompt
@@ -131,11 +134,11 @@ def refine_prompt_stage():
 
     prompt_text = f" {character} {style} {setting}"
 
-    # Pass SYSTEM_PROMPT_IMAGE positionally so the refine uses the image system prompt
-    refined_prompt, err = _safe_call(refine_prompt, prompt_text, SYSTEM_PROMPT_IMAGE, label="prompt refinement")
+    # Refine the prompt with structured generation (-> RefinedImagePrompt); use the combined final_prompt
+    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_IMAGE, RefinedImagePrompt, label="prompt refinement")
     if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
 
-    return jsonify({"ok": True, "refined_prompt": refined_prompt})
+    return jsonify({"ok": True, "refined_prompt": result.final_prompt})
 
 # --------------------------------------------------------------------------------
 # Stage 3: Image from the REFINED prompt
