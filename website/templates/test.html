@@ -6,7 +6,9 @@
   <title>Commun-AI-ty | App Workspace</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
-    /* ── SHARED THEME (matches home.html) ── */
+    /* ================================================================================ */
+    /* Shared Theme (matches home.html)                                                 */
+    /* ================================================================================ */
     :root {
       --orange:    #F5820A;
       --orange-lt: #FBBF6B;
@@ -36,7 +38,7 @@
       flex-direction: column;
     }
 
-    /* ── NAV (same as home) ── */
+    /* NAV (same as home) */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -55,7 +57,9 @@
     }
     .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,130,10,0.35); }
 
-    /* ── PAGE HEADER ── */
+    /* -------------------------------------------------------------------------------- */
+    /* Page Header                                                                      */
+    /* -------------------------------------------------------------------------------- */
     .app-header {
       padding: 7rem 3rem 2.5rem;
       max-width: 1200px; margin: 0 auto;
@@ -112,28 +116,15 @@
     .app-shell::before {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 50% 50% at 90% 0%, rgba(13,158,138,0.06), transparent 70%),
+        radial-gradient(ellipse 50% 50% at 90%  0%, rgba(13,158,138,0.06), transparent 70%),
         radial-gradient(ellipse 40% 40% at 0% 100%, rgba(245,130,10,0.05), transparent 70%);
     }
 
-
-    /* REACT COMPONENT STYLES (the starter UI below) */
-    .demo {
-      position: relative; z-index: 1;
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; text-align: center;
-      min-height: 400px; gap: 1.25rem;
-    }
-    .demo h2 {
-      font-family: 'Syne', sans-serif; font-size: 1.5rem;
-      font-weight: 700; color: var(--dark);
-    }
-    .demo p { color: var(--muted); max-width: 420px; line-height: 1.6; }
     .counter {
       font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
       color: var(--teal); letter-spacing: -1px;
     }
-    .demo-actions { display: flex; gap: 0.75rem; }
+
     .btn {
       padding: 0.7rem 1.6rem; border-radius: 100px; border: none;
       font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
@@ -144,7 +135,9 @@
     .btn-ghost { background: transparent; color: var(--teal-dk); border: 1.5px solid rgba(13,158,138,0.35); }
     .btn-ghost:hover { background: rgba(13,158,138,0.08); }
 
-    /* ── MODE TOGGLE ── */
+    /* -------------------------------------------------------------------------------- */
+    /* Mode Toggle                                                                      */
+    /* -------------------------------------------------------------------------------- */
     .mode-toggle {
       position: relative; z-index: 1;
       display: flex; align-items: center; gap: 0.9rem;
@@ -175,7 +168,7 @@
     }
 
     /* -------------------------------------------------------------------------------- */
-    /* LOADING STATE (spinner + live timer inside a box) */
+    /* Loading State (spinner + live timer inside a box) */
     /* -------------------------------------------------------------------------------- */
     .loading {
       flex: 1; align-self: stretch;
@@ -411,7 +404,7 @@
 
     
     /* ================================================================================ */
-    /* Info Modal  (how "thinking" works)                                               */
+    /* Info Modal (how "thinking" works)                                                */
     /* ================================================================================ */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 200;
@@ -420,9 +413,11 @@
       padding: 2rem;
     }
     .modal-overlay[hidden] { display: none; }
+
+    /* Original width was `560px` */
     .modal {
       position: relative; background: #fff; border-radius: 20px;
-      max-width: 560px; width: 100%; padding: 2.25rem;
+      max-width: 620px; width: 100%; padding: 2.25rem;
       max-height: 85vh; overflow-y: auto;
       box-shadow: 0 24px 70px rgba(14,31,28,0.3);
       animation: modalIn 0.25s ease both;
@@ -539,22 +534,22 @@
         <a class="nav-cta" href="mailto:commun-ai-ty@umich.edu">Contact Us</a>
     </nav>
 
-  <!-- ================================================================================
-           APP WORKSPACE
-  ================================================================================ -->
-  <main class="workspace">
+    <!-- ================================================================================ -->
+    <!-- Main App Workspace -->
+    <!-- ================================================================================ -->
+    <main class="workspace">
 
-    <!-- -------------------------------------------------------------------------------- -->
-    <!-- Generation Mode Toggle (Text <-> Image)                                          -->
-    <!-- -------------------------------------------------------------------------------- -->
-    <div class="mode-toggle">
-        <span class="mode-label">Mode</span>
-        <div class="switch" id="mode-switch">
-            <button type="button" class="switch-opt active" data-mode="text" >Text </button>
-            <button type="button" class="switch-opt"        data-mode="image">Image</button>
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- Generation Mode Toggle (Text <-> Image)                                          -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <div class="mode-toggle">
+            <span class="mode-label">Mode</span>
+            <div class="switch" id="mode-switch">
+                <button type="button" class="switch-opt active" data-mode="text" >Text </button>
+                <button type="button" class="switch-opt"        data-mode="image">Image</button>
+            </div>
+            <span class="mode-hint" id="mode-hint"></span>
         </div>
-        <span class="mode-hint" id="mode-hint"></span>
-    </div>
 
     <!-- ================================================================================ -->
     <!-- 2x2 Grid of Items                                                                -->
