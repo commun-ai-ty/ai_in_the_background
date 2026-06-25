@@ -448,7 +448,7 @@
     .sg-section { margin-top: 1.25rem; }
     .sg-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem; }
     .sg-h3 {
-      font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800;
+      font-family: 'Arial', sans-serif; font-size: 0.95rem; font-weight: 800;
       color: var(--dark); letter-spacing: -0.3px;
     }
     .sg-mode-tag {
@@ -568,37 +568,41 @@
             <!-- Subtitle & "ad-lib" with dropdowns -->
             <div class="grid-subtitle">Design your prompt!</div>
             <form class="grid-box editable" id="save-form">
-            <p class="adlib">
+                <p class="adlib">
 
-                Write me a one paragraph short story about 
+                    <span data-mode-text="Write me a one-paragraph short story about"
+                        data-mode-image="Draw me an image with">Write me a one-paragraph short story about</span> 
 
-                <select id="character-select" name="character">
-                {% for character in options.characters %}
-                    <option value="{{ character }}">{{ character }}</option>
-                {% endfor %}
-                </select>
+                    <select id="character-select" name="character">
+                    {% for character in options.characters %}
+                        <option value="{{ character }}">{{ character }}</option>
+                    {% endfor %}
+                    </select>
 
-                in the style of
+                    in the style of
 
-                <select id="style-select" name="style">
-                {% for style in options.styles %}
-                    <option value="{{ style }}">{{ style }}</option>
-                {% endfor %}
-                </select>
+                    <select id="style-select" name="style">
+                    {% for style in options.styles %}
+                        <option value="{{ style }}">{{ style }}</option>
+                    {% endfor %}
+                    </select>
 
-                set in
+                    set in
 
-                <select id="setting-select" name="setting">
-                {% for setting in options.settings %}
-                    <option value="{{ setting }}">{{ setting }}</option>
-                {% endfor %}
-                </select>.
+                    <select id="setting-select" name="setting">
+                    {% for setting in options.settings %}
+                        <option value="{{ setting }}">{{ setting }}</option>
+                    {% endfor %}
+                    </select>.
 
-            </p>
-            <div class="save-row">
-                <span class="save-status" id="save-status"></span>
-                <button type="submit" class="btn">Submit</button>
-            </div>
+                </p>
+
+                <!-- Submit Button -->
+                <div class="save-row">
+                    <span class="save-status" id="save-status"></span>
+                    <button type="submit" class="btn">Submit</button>
+                </div>
+
             </form>
         </div>
 
@@ -757,6 +761,17 @@
     const switchOpts = modeSwitch.querySelectorAll(".switch-opt");
     let currentMode  = "text";
 
+    // Swap any [data-mode-text]/[data-mode-image] element's text to match the mode.
+    // To make ANY element mode-aware, just give it those two attributes -- e.g.
+    //   <div class="grid-subtitle" data-mode-text="Generated Short Story"
+    //                              data-mode-image="Generated Image">Generated Short Story</div>
+    function applyModeText(mode) {
+        document.querySelectorAll("[data-mode-text]").forEach(el => {
+            const val = (mode === "image") ? el.dataset.modeImage : el.dataset.modeText;
+            if (val != null) el.textContent = val;
+        });
+    }
+
     // Toggle the mode between text and images
     function setMode(mode) {
         currentMode = mode;
@@ -764,9 +779,13 @@
         modeHint.textContent = (mode === "image")
         ? "Image mode generates real images. The default combo uses ready-made samples."
         : "";
+        applyModeText(mode);   // swap mode-dependent labels (data-mode-text / data-mode-image)
         renderSG();   // keep the modal's fields/output in sync with the mode
     }
     switchOpts.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+    // Apply the starting mode's labels on first load
+    applyModeText(currentMode);
 
     // --------------------------------------------------------------------------------
     // POST JSON helper
