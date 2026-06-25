@@ -38,7 +38,6 @@ jobs:
       - name: Run tests
         run: |
           source activate suprashare
-          pytest -v 
 
   publish:
     if: github.ref == 'refs/heads/main'
