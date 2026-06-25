@@ -1,7 +1,6 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from os import path, getenv
+from os import getenv
 
+from flask import Flask
 
 URL_PREFIX = getenv("URL_PREFIX", "")
 
