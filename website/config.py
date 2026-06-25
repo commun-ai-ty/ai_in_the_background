@@ -10,9 +10,14 @@ Configurable constants for the app.
 # Ad-lib dropdown options  (edit these lists to change the dropdown choices)
 # ================================================================================
 ADLIB_OPTIONS = {
-    "characters": ["Harry Potter", "Bluey", "Sherlock Holmes", "Mario", "Wonder Woman"],
-    "styles":     ["Balenciaga", "a Mystery Novel", "Medieval", "Cyberpunk"],
-    "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village", "University of Michigan"],
+    "characters": ["Harry Potter", "Bluey", "Sherlock Holmes", "Mario", "Wonder Woman",
+                   "Spider-Man", "Dory", "Elsa", "K-Pop Demon Hunters"],
+
+    "styles":     ["Balenciaga", "a Mystery Novel", "Medieval", "Cyberpunk", "SpongeBob", 
+                   "the Wild West"],
+
+    "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village", 
+                   "University of Michigan", "a fantastical forest", "a mystical savannah", "space"],
 }
 
 
@@ -28,7 +33,6 @@ IMAGE_MODE = {
     "basic_image":   "basic_image.png",     # premade image for the BASIC prompt
     "refined_image": "refined_image.png",   # premade image for the REFINED prompt
 }
-
 
 
 # --------------------------------------------------------------------------------
@@ -87,9 +91,6 @@ lyrical and melancholic, gritty realism, deadpan humor).\n
 lengths to build tension").\n
 
 """.strip()
-
-
-
 
 
 
