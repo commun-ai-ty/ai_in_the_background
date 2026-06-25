@@ -36,7 +36,7 @@ form_app = Blueprint("form_app", __name__)
 
 
 @form_app.route("/")
-def test():
+def home():
     # Hand the dropdown options + default structured-generation fields to the template
     return render_template(
         "test.html", options=ADLIB_OPTIONS, structured_fields=STRUCTURED_FIELDS

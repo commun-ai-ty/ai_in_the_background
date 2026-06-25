@@ -16,9 +16,7 @@ def create_app():
     app = Flask(__name__, static_url_path=f"{URL_PREFIX}/static")
 
     from .form_app import form_app
-    from .home_dash import home_dash
 
-    # app.register_blueprint(home_dash, url_prefix=URL_PREFIX)
     app.register_blueprint(form_app, url_prefix=URL_PREFIX)
 
     return app
