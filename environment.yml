@@ -13,7 +13,9 @@ dependencies:
   - plotly
   - openai
   - groq
-  - xai-sdk
   - mcp
   - uvicorn
   - python-dotenv
+  - pip
+  - pip:
+    - xai-sdk
