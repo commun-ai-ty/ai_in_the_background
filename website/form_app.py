@@ -4,11 +4,13 @@ Process user form inputs for the main app page.
 `website.form_app`
 
 """
-from flask        import Blueprint, render_template, request, jsonify, url_for
+import traceback
+from flask import Blueprint, render_template, request, jsonify, url_for
 
 # Internal app code
 from website.prompting import refine_prompt, generate_ai_image, generate_short_story
 from website.config    import ADLIB_OPTIONS, IMAGE_MODE, SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
+
 
 # --------------------------------------------------------------------------------
 # Create & route the Flask app
@@ -17,21 +19,52 @@ form_app = Blueprint("form_app", __name__)
 
 @form_app.route("/test")
 def test():
-    # Hand the dropdown options + image-mode combo to the template
-    return render_template("test.html", options=ADLIB_OPTIONS, image_mode=IMAGE_MODE)
+    # Hand the dropdown options to the template (builds the <select>s)
+    return render_template("test.html", options=ADLIB_OPTIONS)
 
 
 # ================================================================================
-# Submitting custom prompts
+# Helpers
+# ================================================================================
+def _adlib_fields(data):
+    """
+    Pull + clean the three ad-lib selections from the request JSON.
+    """
+    return (
+        (data.get("character") or "").strip(),
+        (data.get("style"    ) or "").strip(),
+        (data.get("setting"  ) or "").strip(),
+    )
+
+def _is_default_combo(character, style, setting):
+    """
+    True when the selections match the default combo (use the premade images).
+    """
+    return (
+        character   == IMAGE_MODE["character"]
+        and style   == IMAGE_MODE["style"    ]
+        and setting == IMAGE_MODE["setting"  ]
+    )
+
+def _safe_call(fn, *args, label="operation"):
+    """
+    Run an external API call; on failure print the traceback to the server
+    terminal and return (None, error_message) instead of raising.
+    """
+    try: return fn(*args), None
+    except Exception as exc:
+        print(f"\n[form_app] {label} FAILED:")
+        traceback.print_exc()
+        return None, str(exc)
+
+# ================================================================================
+# [TEXT MODE] One-shot: refine the prompt + generate two short stories
 # ================================================================================
 @form_app.route("/save", methods=["POST"])
 def save():
-    # Read JSON from the browser -- {"mode": "...", "character": "...", "style": "...", "setting": "..."}
+    # Read JSON from the browser: {"mode": "...", "character": "...", "style": "...", "setting": "..."}
     data = request.get_json(silent=True) or {}
-    mode      = (data.get("mode"     ) or "text").strip()
-    character = (data.get("character") or ""    ).strip()
-    style     = (data.get("style"    ) or ""    ).strip()
-    setting   = (data.get("setting"  ) or ""    ).strip()
+    character, style, setting = _adlib_fields(data)
 
     # Guard for missing selections
     if not character or not style or not setting:
@@ -40,42 +73,85 @@ def save():
     # Construct the prompt from the ad-lib
     prompt_text = f" {character} {style} {setting}"
 
-    # --------------------------------------------------------------------------------
-    # [IMAGE MODE] Refine the "prompt" (filled in ad-lib) for image generation
-    # --------------------------------------------------------------------------------
-    # NOTE: Not yet functional without an API key
-    if mode == "image":
-        refined_prompt = refine_prompt(prompt_text, system_prompt=SYSTEM_PROMPT_IMAGE)
+    # Generate the refined prompt
+    refined_prompt = refine_prompt(prompt_text, system_prompt=SYSTEM_PROMPT_TEXT)
 
-        # TODO: Instead of actually generating two images, we just load two pre-made ones for now
-        # ...
-        # ...
+    # Generate a short story for each prompt
+    basic_story   = generate_short_story(prompt_text)     # Top-right    -> uses the basic prompt
+    refined_story = generate_short_story(refined_prompt)  # Bottom-right -> uses the refined prompt
 
-        # Return content to the page
-        return jsonify({
-            "ok"            : True,
-            "mode"          : "image",
-            "prompt_text"   : refined_prompt,
-            "basic_image"   : url_for("static", filename=IMAGE_MODE[  "basic_image"]),
-            "refined_image" : url_for("static", filename=IMAGE_MODE["refined_image"]),
-        })
-    
-    # --------------------------------------------------------------------------------
-    # [TEXT MODE] Refine the "prompt" (filled in ad-lib) for image generation
-    # --------------------------------------------------------------------------------
-    elif mode == "text":
-        refined_prompt = refine_prompt(prompt_text, system_prompt=SYSTEM_PROMPT_TEXT)
+    return jsonify({
+        "ok"            : True,
+        "mode"          : "text",
+        "prompt_text"   : refined_prompt,
+        "basic_story"   : basic_story,
+        "refined_story" : refined_story,
+    })
 
-        # Generate a short story for each prompt
-        basic_story   = generate_short_story(prompt_text)     # First row (top-right)  uses the basic prompt
-        refined_story = generate_short_story(refined_prompt)  # Second row (bottom-right) uses the AI-refined prompt
 
-        # Return content to the page
-        return jsonify({
-            "ok"            : True,
-            "mode"          : "text",
-            "prompt_text"   : refined_prompt,
-            "basic_story"   : basic_story,
-            "refined_story" : refined_story,
-        })
+# ================================================================================
+# [IMAGE MODE] Staged generation -- the page calls these 3 routes in order
+# ================================================================================
+# NOTE: The default combo returns the premade /static images instead of generating
+
+# --------------------------------------------------------------------------------
+# Stage 1: Image from the BASIC (ad-lib) prompt
+# --------------------------------------------------------------------------------
+@form_app.route("/generate-basic-image", methods=["POST"])
+def generate_basic_image():
+    data = request.get_json(silent=True) or {}
+    character, style, setting = _adlib_fields(data)
+
+    # Guard for all arguments
+    if (not character) or (not style) or (not setting):
+        return jsonify({"ok": False, "error": "Please choose all options"}), 400
+
+    # Check if we should use the default image or new ones
+    if _is_default_combo(character, style, setting):
+        image = url_for("static", filename=IMAGE_MODE["basic_image"])   # premade sample
+
+    # Generate the basic image
+    else:
+        prompt_text = f" {character} {style} {setting}"
+        image, err = _safe_call(generate_ai_image, prompt_text, label="basic image generation")
+        if err: return jsonify({"ok": False, "error": f"Image generation failed: {err}"}), 502
+
+    return jsonify({"ok": True, "image": image})
+
+# --------------------------------------------------------------------------------
+# Stage 2: Refine the ad-lib prompt (for image generation)
+# --------------------------------------------------------------------------------
+@form_app.route("/refine-prompt", methods=["POST"])
+def refine_prompt_stage():
+    data = request.get_json(silent=True) or {}
+    character, style, setting = _adlib_fields(data)
+
+    if not character or not style or not setting:
+        return jsonify({"ok": False, "error": "Please choose all options"}), 400
+
+    prompt_text = f" {character} {style} {setting}"
+
+    # Pass SYSTEM_PROMPT_IMAGE positionally so the refine uses the image system prompt
+    refined_prompt, err = _safe_call(refine_prompt, prompt_text, SYSTEM_PROMPT_IMAGE, label="prompt refinement")
+    if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
+
+    return jsonify({"ok": True, "refined_prompt": refined_prompt})
+
+# --------------------------------------------------------------------------------
+# Stage 3: Image from the REFINED prompt
+# --------------------------------------------------------------------------------
+@form_app.route("/generate-refined-image", methods=["POST"])
+def generate_refined_image():
+    data = request.get_json(silent=True) or {}
+    character, style, setting = _adlib_fields(data)
+    refined_prompt = (data.get("refined_prompt") or "").strip()
+
+    if _is_default_combo(character, style, setting):
+        image = url_for("static", filename=IMAGE_MODE["refined_image"])  # premade sample
+    else:
+        if not refined_prompt: return jsonify({"ok": False, "error": "Missing refined prompt"}), 400
+        image, err = _safe_call(generate_ai_image, refined_prompt, label="refined image generation")
+        if err: return jsonify({"ok": False, "error": f"Image generation failed: {err}"}), 502
+
+    return jsonify({"ok": True, "image": image})
 
