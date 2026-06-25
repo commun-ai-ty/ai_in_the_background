@@ -2,20 +2,18 @@ name: suprashare
 channels:
   - defaults
 dependencies:
-  - _anaconda_depends
   - python=3.11
   - setuptools
-  - pip
-    - flask==3.1.3
-    - flask-sqlalchemy==3.1.1
-    - flask-wtf==1.3.0
-    - dash==4.3.0
-    - pandas==3.0.3
-    - numpy==2.4.6
-    - plotly==6.8.0
-    - openai==2.43.0
-    - groq==1.5.0
-    - xai-sdk==1.17.0
-    - mcp==1.28.0
-    - uvicorn==0.49.0
-    - python-dotenv==1.2.2
+  - flask
+  - flask-sqlalchemy
+  - flask-wtf
+  - dash
+  - pandas
+  - numpy
+  - plotly
+  - openai
+  - groq
+  - xai-sdk
+  - mcp
+  - uvicorn
+  - python-dotenv
