@@ -11,7 +11,7 @@ Configurable constants for the app.
 # ================================================================================
 ADLIB_OPTIONS = {
     "characters": ["Harry Potter", "Bluey", "Sherlock Holmes", "Mario", "Wonder Woman",
-                   "Spider-Man", "Dory", "Elsa", "K-Pop Demon Hunters"],
+                   "Spider-Man", "Dory", "Elsa", "K-Pop Demon Hunters", "a bunny"],
 
     "styles":     ["Balenciaga", "a Mystery Novel", "Medieval", "Cyberpunk", "SpongeBob", 
                    "the Wild West"],
@@ -19,7 +19,6 @@ ADLIB_OPTIONS = {
     "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village", 
                    "University of Michigan", "a fantastical forest", "a mystical savannah", "space"],
 }
-
 
 # ================================================================================
 # Image Mode (NOTE: Limited options due to it being "faked")
@@ -86,11 +85,39 @@ details (smell, sound, texture) to quickly ground the reader.\n
 **Tone & Voice:** The emotional atmosphere and stylistic execution (e.g., 
 lyrical and melancholic, gritty realism, deadpan humor).\n
 
-**Structural Constraints:** Specific instructions on pacing and structure 
-(e.g., "Start in media res," "End with a lingering question," "Vary sentence 
+**Structural Constraints:** Specific instructions on pacing and structure
+(e.g., "Start in media res," "End with a lingering question," "Vary sentence
 lengths to build tension").\n
 
 """.strip()
 
 
+# ================================================================================
+# Structured-generation fields 
+# ================================================================================
+# The "setup" that users can edit (each includes a title + description). The 
+# Pydantic schema is built dynamically from these, so they can be customized 
+# from the page. Up to 5 fields per mode; a `final_prompt` is always added.
+STRUCTURED_FIELDS = {
+
+    # Image Generation
+    "image": [
+        {"title": "Core Subject",          "description": "The primary focus, described with precise, vivid physical details."},
+        {"title": "Medium & Style",        "description": "The specific visual format (e.g., 35mm macro photography, cyberpunk concept art, oil painting)."},
+        {"title": "Lighting & Atmosphere", "description": "The mood and illumination (e.g., volumetric lighting, golden hour, bioluminescent glow)."},
+        {"title": "Composition & Camera",  "description": "Framing and perspective (e.g., extreme close-up, low-angle shot, 24mm lens)."},
+        {"title": "Quality & Technical",   "description": "Engine and render tags (e.g., 8k resolution, intricate details, masterpiece, octane render)."},
+    ],
+
+    # Short Story Generation
+    "text": [
+        {"title": "Scene & Quote",             "description": " Reference a known scene or quote from the original story and work it in to the new story, but changed with our style twist added."},
+        #{"title": "Core Narrative Arc",       "description": "The immediate conflict, the climax, and the resolution/twist, compressed to fit one paragraph."},
+        {"title": "Character & Perspective",   "description": "The focal character and the point of view (e.g., close third-person, unreliable first-person)."},
+        {"title": "Setting & Sensory Anchors", "description": "The specific environment and 1-2 distinct sensory details (smell, sound, texture)."},
+        {"title": "Tone & Voice",              "description": "The emotional atmosphere and stylistic execution (e.g., lyrical and melancholic, gritty realism)."},
+        {"title": "Structural Constraints",    "description": "Instructions on pacing and structure (e.g., 'start in media res', 'end with a lingering question')."},
+    ],
+}
+#
 

@@ -87,7 +87,9 @@
       color: var(--muted); max-width: 640px;
     }
 
-    /* ── APP WORKSPACE (your blank canvas) ── */
+    /* ================================================================================ */
+    /* App Workspace                                                                    */
+    /* ================================================================================ */
     .workspace {
       width: 100%; max-width: 1200px; margin: 0 auto;
       /* top padding clears the fixed 68px nav; grow to fill leftover height */
@@ -114,7 +116,8 @@
         radial-gradient(ellipse 40% 40% at 0% 100%, rgba(245,130,10,0.05), transparent 70%);
     }
 
-    /* ── REACT COMPONENT STYLES (the starter UI below) ── */
+
+    /* REACT COMPONENT STYLES (the starter UI below) */
     .demo {
       position: relative; z-index: 1;
       display: flex; flex-direction: column; align-items: center;
@@ -171,7 +174,9 @@
       object-fit: contain; border-radius: 10px;
     }
 
-    /* ── LOADING STATE (spinner + live timer inside a box) ── */
+    /* -------------------------------------------------------------------------------- */
+    /* LOADING STATE (spinner + live timer inside a box) */
+    /* -------------------------------------------------------------------------------- */
     .loading {
       flex: 1; align-self: stretch;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -190,7 +195,9 @@
       letter-spacing: 0.02em; opacity: 0.85;
     }
 
-    /* ── 2x2 GRID OF BOXES ── */
+    /* -------------------------------------------------------------------------------- */
+    /* 2x2 GRID OF BOXES                                                                */
+    /* -------------------------------------------------------------------------------- */
     .grid-2x2 {
       position: relative; z-index: 1;
       display: grid;
@@ -305,7 +312,9 @@
       .grid-2x2 { grid-template-columns: 1fr; grid-template-rows: auto; }
     }
 
-    /* ── FOOTER (same as home) ── */
+    /* -------------------------------------------------------------------------------- */
+    /* Footer (same as home)                                                            */
+    /* -------------------------------------------------------------------------------- */
     footer {
       background: var(--dark); border-top: 1px solid rgba(255,255,255,0.05);
       padding: 3rem;
@@ -321,11 +330,11 @@
     .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
 
 
-
-
-
-    /* ── AVATAR GUIDE (on the bottom-left tile) ── */
+    /* ================================================================================ */
+    /* Avatar Guide (shown by the bottom-left tile)                                     */
+    /* ================================================================================ */
     .avatar-host { position: relative; }
+
     /* tile must sit ABOVE the avatar so the robot peeks from behind its corner */
     .avatar-host .grid-box { position: relative; z-index: 1; }
     .avatar-img {
@@ -372,9 +381,9 @@
     .info-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(13,158,138,0.45); }
 
 
-
-
-    /* ── FLOW ARROWS (left column -> right column) ── */
+    /* ================================================================================ */
+    /* Flow Arrows (left column -> right column)                                        */
+    /* ================================================================================ */
     .flow-arrow {
       position: absolute; left: 50%; z-index: 5;
       transform: translate(-50%, -50%);
@@ -400,13 +409,10 @@
       border-color: transparent transparent transparent var(--teal-dk);
     }
 
-
-
-
-
-
-
-    /* ── MODAL (info: how refinement works) ── */
+    
+    /* ================================================================================ */
+    /* Info Modal  (how "thinking" works)                                               */
+    /* ================================================================================ */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 200;
       display: flex; align-items: center; justify-content: center;
@@ -416,7 +422,8 @@
     .modal-overlay[hidden] { display: none; }
     .modal {
       position: relative; background: #fff; border-radius: 20px;
-      max-width: 520px; width: 100%; padding: 2.25rem;
+      max-width: 560px; width: 100%; padding: 2.25rem;
+      max-height: 85vh; overflow-y: auto;
       box-shadow: 0 24px 70px rgba(14,31,28,0.3);
       animation: modalIn 0.25s ease both;
     }
@@ -438,6 +445,76 @@
     .modal-body p:last-child { margin-bottom: 0; }
     .modal-body strong { color: var(--teal-dk); }
 
+    /* -------------------------------------------------------------------------------- */
+    /* Structured-Generation Editor (form inside of the modal)                          */
+    /* -------------------------------------------------------------------------------- */
+    .sg-intro { font-size: 0.9rem; line-height: 1.65; color: var(--text); margin-bottom: 1.25rem; }
+    .sg-intro strong { color: var(--teal-dk); }
+    .sg-section { margin-top: 1.25rem; }
+    .sg-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem; }
+    .sg-h3 {
+      font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800;
+      color: var(--dark); letter-spacing: -0.3px;
+    }
+    .sg-mode-tag {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--teal-dk); background: rgba(13,158,138,0.1);
+      padding: 0.2rem 0.6rem; border-radius: 100px;
+    }
+    .sg-mode-tag.image { color: #9a5300; background: rgba(245,130,10,0.12); }
+
+    .sg-fields { display: flex; flex-direction: column; gap: 0.65rem; }
+    .sg-field {
+      background: var(--cream); border: 1px solid var(--border); border-radius: 12px;
+      padding: 0.7rem 0.75rem; display: flex; flex-direction: column; gap: 0.45rem;
+    }
+    .sg-field-top { display: flex; align-items: center; gap: 0.5rem; }
+    .sg-field-title {
+      flex: 1; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+      color: var(--dark); background: #fff;
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.6rem;
+    }
+    .sg-field-desc {
+      width: 100%; resize: vertical; min-height: 42px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.82rem; line-height: 1.5;
+      color: var(--text); background: #fff;
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.6rem;
+    }
+    .sg-field-title:focus, .sg-field-desc:focus {
+      outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,158,138,0.12);
+    }
+    .sg-field-remove {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      border: none; cursor: pointer; background: rgba(192,57,43,0.1); color: #c0392b;
+      font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .sg-field-remove:hover { background: rgba(192,57,43,0.2); }
+
+    .sg-actions { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+    .sg-add, .sg-reset {
+      font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      padding: 0.45rem 0.9rem; border-radius: 100px; transition: background 0.15s, color 0.15s;
+    }
+    .sg-add  { border: none; background: var(--teal); color: #fff; }
+    .sg-add:hover { background: var(--teal-dk); }
+    .sg-add:disabled { opacity: 0.45; cursor: default; }
+    .sg-reset { border: 1.5px solid rgba(13,158,138,0.35); background: transparent; color: var(--teal-dk); }
+    .sg-reset:hover { background: rgba(13,158,138,0.08); }
+
+    .sg-output { display: flex; flex-direction: column; gap: 0.5rem; }
+    .sg-empty { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+    .sg-out-row {
+      background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.75rem;
+    }
+    .sg-out-row.sg-out-final { background: rgba(245,130,10,0.07); border-color: rgba(245,130,10,0.25); }
+    .sg-out-title {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--teal-dk); margin-bottom: 0.2rem;
+    }
+    .sg-out-final .sg-out-title { color: #9a5300; }
+    .sg-out-value { font-size: 0.85rem; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+
     @media (max-width: 900px) {
       nav { padding: 0 1.5rem; }
       .workspace { padding: calc(68px + 1.5rem) 1.5rem 2rem; }
@@ -446,28 +523,30 @@
     @media (max-width: 600px) {
       .flow-arrow { display: none; }
     }
+
   </style>
 </head>
 
+
 <body>
-  <!-- ================================================================================ 
-           NAV
-  ================================================================================ -->
-  <nav>
-    <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
-      <img src="{{ url_for('static', filename='commun-ai-ty_logo_color.png') }}" alt="Commun-AI-ty">
-    </a>
-    <a class="nav-cta" href="mailto:commun-ai-ty@umich.edu">Contact Us</a>
-  </nav>
+    <!-- ================================================================================ -->
+    <!-- Navigation -->
+    <!-- ================================================================================ -->
+    <nav>
+        <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
+        <img src="{{ url_for('static', filename='commun-ai-ty_logo_color.png') }}" alt="Commun-AI-ty">
+        </a>
+        <a class="nav-cta" href="mailto:commun-ai-ty@umich.edu">Contact Us</a>
+    </nav>
 
   <!-- ================================================================================
            APP WORKSPACE
   ================================================================================ -->
   <main class="workspace">
 
-    <!-- --------------------------------------------------------------------------------
-             Mode toggle: Text <-> Image
-    -------------------------------------------------------------------------------- -->
+    <!-- -------------------------------------------------------------------------------- -->
+    <!-- Generation Mode Toggle (Text <-> Image)                                          -->
+    <!-- -------------------------------------------------------------------------------- -->
     <div class="mode-toggle">
         <span class="mode-label">Mode</span>
         <div class="switch" id="mode-switch">
@@ -477,21 +556,26 @@
         <span class="mode-hint" id="mode-hint"></span>
     </div>
 
-    <!-- --------------------------------------------------------------------------------
-             2x2 Grid of Items
-    -------------------------------------------------------------------------------- -->
+    <!-- ================================================================================ -->
+    <!-- 2x2 Grid of Items                                                                -->
+    <!-- ================================================================================ -->
     <div class="grid-2x2">
 
-        <!-- Top-left: ad-lib with two dropdowns 
-         -------------------------------------------------------------------------------- 
-         Write me a one paragraph short story about 
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- [Top-left] "Ad-lib" prompt with dropdowns                                         -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <!--  
+         "Write me a one paragraph short story about ..."
+         "Draw me an image with ..."
          -->
         <div class="grid-item">
+
+            <!-- Subtitle & "ad-lib" with dropdowns -->
             <div class="grid-subtitle">Design your prompt!</div>
             <form class="grid-box editable" id="save-form">
             <p class="adlib">
 
-                Draw me an image with 
+                Write me a one paragraph short story about 
 
                 <select id="character-select" name="character">
                 {% for character in options.characters %}
@@ -501,13 +585,11 @@
 
                 in the style of
 
-
                 <select id="style-select" name="style">
                 {% for style in options.styles %}
                     <option value="{{ style }}">{{ style }}</option>
                 {% endfor %}
                 </select>
-
 
                 set in
 
@@ -516,7 +598,6 @@
                     <option value="{{ setting }}">{{ setting }}</option>
                 {% endfor %}
                 </select>.
-
 
             </p>
             <div class="save-row">
@@ -527,9 +608,11 @@
         </div>
 
 
-        <!-- Top-right: short story from the BASIC prompt
-        -------------------------------------------------------------------------------- -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- [Top-right] Short story / image from the **BASIC** (ad-lib) prompt               -->
+        <!-- -------------------------------------------------------------------------------- -->
         <div class="grid-item">
+            <!-- Subtitle & text-box -->
             <div class="grid-subtitle">Original</div>
             <div class="grid-box preview" id="basic-story-output">
                &lt;Result from the original prompt&gt;
@@ -537,28 +620,33 @@
         </div>
 
 
-        <!-- Bottom-left: shows the filled-in ad-lib after submit
-         -------------------------------------------------------------------------------- -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- [Bottom-left] New prompt after AI "thinking" has refined the ad-lib              -->
+        <!-- -------------------------------------------------------------------------------- -->
         <div class="grid-item row-refined avatar-host">
-            <!-- avatar peeking from behind the tile's top-left corner -->
+            <!-- Avatar peeking from behind the tile's top-left corner -->
             <img class="avatar-img" src="{{ url_for('static', filename='robot.png') }}" alt="Guide robot">
 
-
-            <!-- speech bubble near his mouth + info button to the right -->
+            <!-- Speech bubble near his mouth + info button to the right -->
             <div class="avatar-speech">
                 <div class="speech-bubble">Let's tell the AI to refine our prompt!</div>
                 <button type="button" class="info-btn" id="refine-info-btn" aria-label="How does refinement work?">i</button>
             </div>
+
+            <!-- Subtitle & text-box -->
             <div class="grid-subtitle hidden"> hidden </div>
             <div class="grid-box preview" id="submission-output">
                 &lt;AI internal thinking process&gt;
             </div>
+
         </div>
 
 
-        <!-- Bottom-right: short story from the REFINED prompt
-         -------------------------------------------------------------------------------- -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- [Bottom-right] Short story / image from the **REFINED** (thinking) prompt        -->
+        <!-- -------------------------------------------------------------------------------- -->
         <div class="grid-item row-refined">
+            <!-- Subtitle & text-box -->
             <div class="grid-subtitle">Refined</div>
             <div class="grid-box preview" id="refined-story-output">
                 &lt;AI-refined result&gt;
@@ -567,7 +655,10 @@
 
 
 
-        <!-- arrows pointing from the left column to the right column (one per row) -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- Flow Arrows (arrows pointing from the left column to the right column)           -->
+        <!-- -------------------------------------------------------------------------------- -->
+         <!-- NOTE: The "flow caption" text spans are currently set to NOT be displayed -->
         <div class="flow-arrow flow-arrow-top" aria-hidden="true">
             <span class="flow-caption">generating</span>
             <span class="flow-line"></span>
@@ -580,13 +671,12 @@
 
     </div>
 
-
   </main>
 
 
 
   <!-- ================================================================================ -->
-  <!-- FOOTER -->
+  <!-- FOOTER                                                                           -->
   <!-- ================================================================================ -->
   <footer>
     <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
@@ -598,6 +688,7 @@
     <div class="footer-copy">© 2026 Commun-AI-ty · University of Michigan</div>
   </footer>
 
+
   <!-- ================================================================================ -->
   <!-- INFO MODAL: how prompt refinement works -->
   <!-- ================================================================================ -->
@@ -608,25 +699,39 @@
       <h2 class="modal-title" id="refine-modal-title">How AI models "think" in the background</h2>
 
       <div class="modal-body">
-        <p>
-          When you hit <strong>Submit</strong>, your basic ad-lib prompt is first sent to an AI model
-          with special instructions to <strong>rewrite it into a richer, more detailed prompt</strong>.
+        <p class="sg-intro">
+          Refinement uses <strong>structured generation</strong>: the model fills in each field below
+          (guided by its description), then writes one combined <strong>final prompt</strong>. Edit the
+          fields to change how it thinks — your changes apply to the next <strong>Submit</strong>.
         </p>
-        <p>
-          The model adds specifics — subject details, style, lighting, mood, composition — that a basic
-          prompt leaves out. That expanded version is the <strong>Refined Prompt</strong> shown in this box.
-        </p>
-        <p>
-          We then generate a result from <em>both</em> versions so you can compare: the top row uses your
-          basic prompt, and the bottom row uses the refined one.
-        </p>
+
+        <!-- Editable structured-generation setup -->
+        <div class="sg-section">
+          <div class="sg-section-head">
+            <h3 class="sg-h3">Structured fields</h3>
+            <span class="sg-mode-tag" id="sg-mode-tag">text</span>
+          </div>
+          <div class="sg-fields" id="sg-fields"><!-- JS renders field rows here --></div>
+          <div class="sg-actions">
+            <button type="button" class="sg-add"   id="sg-add-field">+ Add field</button>
+            <button type="button" class="sg-reset" id="sg-reset">Reset to default</button>
+          </div>
+        </div>
+
+        <!-- Latest structured output -->
+        <div class="sg-section">
+          <h3 class="sg-h3">Latest output</h3>
+          <div class="sg-output" id="sg-output"><!-- JS renders the output here --></div>
+        </div>
       </div>
     </div>
   </div>
 
 
-
  
+  <!-- default structured-generation fields, handed from Flask as JSON -->
+  <script type="application/json" id="structured-fields-data">{{ structured_fields | tojson }}</script>
+
   <script>
     // ================================================================================
     // "Save" Form Script -- routes data to Flask in the backend + prevents reload
@@ -664,6 +769,7 @@
         modeHint.textContent = (mode === "image")
         ? "Image mode generates real images. The default combo uses ready-made samples."
         : "";
+        renderSG();   // keep the modal's fields/output in sync with the mode
     }
     switchOpts.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
@@ -725,6 +831,95 @@
     }
 
     // ================================================================================
+    // Structured-generation editor (lives inside the info modal)
+    // ================================================================================
+    // Default field sets (per mode) handed from Flask
+    const DEFAULT_FIELDS = JSON.parse(document.getElementById("structured-fields-data").textContent);
+    const SG_MAX = 5;
+
+    // Editable copies (per mode) + the last run's output (per mode)
+    const sgFields = { image: structuredClone(DEFAULT_FIELDS.image), text: structuredClone(DEFAULT_FIELDS.text) };
+    const sgOutput = { image: null, text: null };
+
+    const sgFieldsBox = document.getElementById("sg-fields");
+    const sgOutputBox = document.getElementById("sg-output");
+    const sgModeTag   = document.getElementById("sg-mode-tag");
+    const sgAddBtn    = document.getElementById("sg-add-field");
+    const sgResetBtn  = document.getElementById("sg-reset");
+
+    // Escape user-typed text before injecting it into innerHTML
+    const escapeHtml = (s) => String(s ?? "").replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+    const escapeAttr = (s) => escapeHtml(s).replace(/"/g, "&quot;");
+
+    // Render the editable field rows for the current mode
+    function renderSGFields() {
+        const fields = sgFields[currentMode];
+        sgFieldsBox.innerHTML = fields.map((f, i) => `
+            <div class="sg-field">
+                <div class="sg-field-top">
+                    <input class="sg-field-title" type="text" value="${escapeAttr(f.title)}" placeholder="Field title">
+                    <button type="button" class="sg-field-remove" title="Remove field" data-index="${i}">&times;</button>
+                </div>
+                <textarea class="sg-field-desc" placeholder="What should this field contain?">${escapeHtml(f.description)}</textarea>
+            </div>`).join("");
+        sgAddBtn.disabled = fields.length >= SG_MAX;
+    }
+
+    // Render the latest structured output for the current mode
+    function renderSGOutput() {
+        const out = sgOutput[currentMode];
+        if (!out) {
+            sgOutputBox.innerHTML = `<p class="sg-empty">Run a Submit in ${currentMode} mode to see the output here.</p>`;
+            return;
+        }
+        const rows = out.components.map(c => `
+            <div class="sg-out-row">
+                <div class="sg-out-title">${escapeHtml(c.title)}</div>
+                <div class="sg-out-value">${escapeHtml(c.value)}</div>
+            </div>`).join("");
+        sgOutputBox.innerHTML = rows + `
+            <div class="sg-out-row sg-out-final">
+                <div class="sg-out-title">final_prompt</div>
+                <div class="sg-out-value">${escapeHtml(out.final_prompt)}</div>
+            </div>`;
+    }
+
+    // Re-render the whole modal panel for the current mode
+    function renderSG() {
+        sgModeTag.textContent = currentMode;
+        sgModeTag.classList.toggle("image", currentMode === "image");
+        renderSGFields();
+        renderSGOutput();
+    }
+
+    // Read the form inputs back into state (live, on every keystroke)
+    function syncSGFields() {
+        sgFields[currentMode] = Array.from(sgFieldsBox.querySelectorAll(".sg-field")).map(row => ({
+            title:       row.querySelector(".sg-field-title").value,
+            description: row.querySelector(".sg-field-desc").value,
+        }));
+    }
+
+    sgFieldsBox.addEventListener("input", syncSGFields);
+    sgFieldsBox.addEventListener("click", (e) => {           // remove a field
+        const btn = e.target.closest(".sg-field-remove");
+        if (!btn) return;
+        syncSGFields();
+        sgFields[currentMode].splice(Number(btn.dataset.index), 1);
+        renderSGFields();
+    });
+    sgAddBtn.addEventListener("click", () => {                // add a field (cap at SG_MAX)
+        syncSGFields();
+        if (sgFields[currentMode].length >= SG_MAX) return;
+        sgFields[currentMode].push({ title: "", description: "" });
+        renderSGFields();
+    });
+    sgResetBtn.addEventListener("click", () => {              // reset to defaults
+        sgFields[currentMode] = structuredClone(DEFAULT_FIELDS[currentMode]);
+        renderSGFields();
+    });
+
+    // ================================================================================
     // Listener for the submit button
     // ================================================================================
     form.addEventListener("submit", async (event) => {
@@ -756,9 +951,11 @@
                 status.textContent = "Refining the prompt...";
                 setLoading(output, "Refining the prompt");
                 startTimer();
-                const s2 = await postJSON(URL_REFINE, combo);
+                const s2 = await postJSON(URL_REFINE, { ...combo, fields: sgFields.image });
                 output.className = "grid-box output";
                 output.textContent = s2.refined_prompt;
+                sgOutput.image = s2.structured;   // feed the modal's "Latest output"
+                renderSGOutput();
 
                 // Stage 3: image from the refined prompt -> bottom-right
                 status.textContent = "Generating refined image...";
@@ -780,7 +977,7 @@
                 startTimer();
 
                 // Get data from the backend
-                const data = await postJSON(URL_SAVE, combo);
+                const data = await postJSON(URL_SAVE, { ...combo, fields: sgFields.text });
 
                 // Set the container text content
                 output      .textContent = data.prompt_text;     // refined prompt -> bottom-left
@@ -791,6 +988,9 @@
                 output      .className = "grid-box output";
                 basicStory  .className = "grid-box output";
                 refinedStory.className = "grid-box output";
+
+                sgOutput.text = data.structured;   // feed the modal's "Latest output"
+                renderSGOutput();
             }
 
             // Request fully complete
@@ -820,7 +1020,7 @@
     const infoBtn   = document.getElementById("refine-info-btn");
     const infoModal = document.getElementById("refine-modal");
     const infoClose = document.getElementById("refine-modal-close");
-    const  openModal = () => { infoModal.hidden = false; };
+    const  openModal = () => { renderSG(); infoModal.hidden = false; };
     const closeModal = () => { infoModal.hidden = true;  };
 
     // Buttons

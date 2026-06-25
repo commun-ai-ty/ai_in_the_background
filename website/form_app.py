@@ -9,8 +9,9 @@ from flask import Blueprint, render_template, request, jsonify, url_for
 
 # Internal app code
 from website.prompting             import generate_ai_image, generate_short_story
-from website.structured_generation import structured_refine, RefinedImagePrompt, RefinedStoryPrompt
-from website.config                import ADLIB_OPTIONS, IMAGE_MODE, SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
+from website.structured_generation import structured_refine
+from website.config                import ADLIB_OPTIONS, IMAGE_MODE, STRUCTURED_FIELDS 
+from website.config                import SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
 
 
 # --------------------------------------------------------------------------------
@@ -20,8 +21,8 @@ form_app = Blueprint("form_app", __name__)
 
 @form_app.route("/test")
 def test():
-    # Hand the dropdown options to the template (builds the <select>s)
-    return render_template("test.html", options=ADLIB_OPTIONS)
+    # Hand the dropdown options + default structured-generation fields to the template
+    return render_template("test.html", options=ADLIB_OPTIONS, structured_fields=STRUCTURED_FIELDS)
 
 
 # ================================================================================
@@ -58,6 +59,23 @@ def _safe_call(fn, *args, label="operation"):
         traceback.print_exc()
         return None, str(exc)
 
+def _clean_fields(raw, default):
+    """
+    Validate custom structured-generation fields posted from the page
+    (a list of {title, description}); fall back to `default` if none are usable.
+    Caps at 5 fields; a field needs at least a title.
+    """
+    if not isinstance(raw, list): return default
+
+    cleaned = []
+    for f in raw[:5]:                                  # cap at 5 fields
+        if not isinstance(f, dict): continue
+        title = (f.get("title"      ) or "").strip()
+        desc  = (f.get("description") or "").strip()
+        if title: cleaned.append({"title": title, "description": desc})
+
+    return cleaned or default
+
 # ================================================================================
 # [TEXT MODE] One-shot: refine the prompt + generate two short stories
 # ================================================================================
@@ -74,10 +92,11 @@ def save():
     # Construct the prompt from the ad-lib
     prompt_text = f" {character} {style} {setting}"
 
-    # Refine the prompt with structured generation (-> RefinedStoryPrompt); use the combined final_prompt
-    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_TEXT, RefinedStoryPrompt, label="prompt refinement")
+    # Refine with structured generation (fields come from the page, or the text defaults)
+    fields = _clean_fields(data.get("fields"), STRUCTURED_FIELDS["text"])
+    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_TEXT, fields, label="prompt refinement")
     if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
-    refined_prompt = result.final_prompt
+    refined_prompt = result["final_prompt"]
 
     # Generate a short story for each prompt
     basic_story   = generate_short_story(prompt_text)     # Top-right    -> uses the basic prompt
@@ -87,6 +106,7 @@ def save():
         "ok"            : True,
         "mode"          : "text",
         "prompt_text"   : refined_prompt,
+        "structured"    : result,          # {components, final_prompt} for the modal
         "basic_story"   : basic_story,
         "refined_story" : refined_story,
     })
@@ -134,11 +154,16 @@ def refine_prompt_stage():
 
     prompt_text = f" {character} {style} {setting}"
 
-    # Refine the prompt with structured generation (-> RefinedImagePrompt); use the combined final_prompt
-    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_IMAGE, RefinedImagePrompt, label="prompt refinement")
+    # Refine with structured generation (fields come from the page, or the image defaults)
+    fields = _clean_fields(data.get("fields"), STRUCTURED_FIELDS["image"])
+    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_IMAGE, fields, label="prompt refinement")
     if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
 
-    return jsonify({"ok": True, "refined_prompt": result.final_prompt})
+    return jsonify({
+        "ok"             : True,
+        "refined_prompt" : result["final_prompt"],
+        "structured"     : result,         # {components, final_prompt} for the modal
+    })
 
 # --------------------------------------------------------------------------------
 # Stage 3: Image from the REFINED prompt
