@@ -320,14 +320,18 @@
     .footer-links a:hover { color: var(--teal-lt); }
     .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
 
+
+
+
+
     /* ── AVATAR GUIDE (on the bottom-left tile) ── */
     .avatar-host { position: relative; }
     /* tile must sit ABOVE the avatar so the robot peeks from behind its corner */
     .avatar-host .grid-box { position: relative; z-index: 1; }
     .avatar-img {
       position: absolute; top: 0; left: 0;
-      width: 192px; height: auto;
-      transform: translate(-86px, -36px);
+      width: 312px; height: auto;             /* 192px; transform: translate(-86px, -36px); */
+      transform: translate(-165px, -36px);
       z-index: 2;                       /* behind the tile */
       pointer-events: none;
       filter: drop-shadow(0 8px 14px rgba(14,31,28,0.22));
