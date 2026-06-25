@@ -4,21 +4,23 @@ Structured generation for the chat prompt refinement.
 `website.structured_generation`
 
 """
-import os, re
 
-from openai   import OpenAI
+import os
+import re
+
+from openai import OpenAI
 from pydantic import Field, create_model
 
 # Using the OpenAI library, but pointed at Groq's OpenAI-compatible endpoint + key,
 # so structured generation runs on our Groq key.
 client = OpenAI(
-    base_url = "https://api.groq.com/openai/v1",
-    api_key  = os.environ.get("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.environ.get("GROQ_API_KEY"),
 )
 
 # Must be a Groq model that supports JSON-schema structured outputs
 # Supported list: https://console.groq.com/docs/structured-outputs#supported-models
-STRUCTURED_MODEL = "openai/gpt-oss-20b" # "meta-llama/llama-4-scout-17b-16e-instruct" | "moonshotai/kimi-k2-instruct"
+STRUCTURED_MODEL = "openai/gpt-oss-20b"  # "meta-llama/llama-4-scout-17b-16e-instruct" | "moonshotai/kimi-k2-instruct"
 
 
 # ================================================================================
@@ -37,8 +39,8 @@ def build_schema(fields: list[dict]):
     identifiers parallel to `fields` (so values can be mapped back to titles).
     """
     model_fields = {}
-    names        = []
-    used         = set()
+    names = []
+    used = set()
 
     for i, f in enumerate(fields):
         name = _field_name(f.get("title", ""), i)
@@ -53,7 +55,9 @@ def build_schema(fields: list[dict]):
 
     model_fields["final_prompt"] = (
         str,
-        Field(description="The complete refined prompt as one ready-to-use string combining all elements above."),
+        Field(
+            description="The complete refined prompt as one ready-to-use string combining all elements above."
+        ),
     )
     return create_model("CustomRefinedPrompt", **model_fields), names
 
@@ -80,13 +84,14 @@ def structured_refine(base_prompt: str, system_prompt: str, fields: list[dict]) 
     completion = client.chat.completions.parse(
         # Request content
         messages=[
-            {"role": "system", "content": system_prompt}, # System Prompt (text vs image)
-            {"role": "user",   "content":   use_prompt}, # User message to respond to
+            {
+                "role": "system",
+                "content": system_prompt,
+            },  # System Prompt (text vs image)
+            {"role": "user", "content": use_prompt},  # User message to respond to
         ],
-
         # The language model which will generate the completion
         model=STRUCTURED_MODEL,
-
         # Parse the reply straight into the dynamically-built schema
         response_format=schema,
     )
@@ -94,9 +99,12 @@ def structured_refine(base_prompt: str, system_prompt: str, fields: list[dict]) 
     # Map the parsed values back onto the user-facing field titles
     parsed = completion.choices[0].message.parsed.model_dump()
     components = [
-        {"title": f["title"], "description": f.get("description", ""), "value": parsed.get(name, "")}
+        {
+            "title": f["title"],
+            "description": f.get("description", ""),
+            "value": parsed.get(name, ""),
+        }
         for f, name in zip(fields, names)
     ]
 
     return {"components": components, "final_prompt": parsed.get("final_prompt", "")}
-
