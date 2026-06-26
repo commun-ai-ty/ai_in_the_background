@@ -225,7 +225,9 @@
       position: relative; z-index: 1;
       display: grid;
       grid-template-columns: 1fr 1fr;       /* 2 columns */
-      grid-template-rows: 1fr auto 1fr;     /* top row · note banner · bottom row */
+      /* top row sizes to its OWN content (stays stable); the bottom row fills the
+         leftover height and grows with the pipeline -- page scrolls when it's long */
+      grid-template-rows: auto auto 1fr;    /* top row · note banner · bottom row */
       gap: 1.5rem;
       flex: 1;                              /* fill the app-shell height */
     }
@@ -397,15 +399,14 @@
       pointer-events: none;
       filter: drop-shadow(0 8px 14px rgba(14,31,28,0.22));
     }
-    /* speech bubble (near his mouth) + info button to its right */
+    /* speech bubble (near his mouth) + the Customize button to its RIGHT */
     .avatar-speech {
       position: absolute; top: 0; left: 0;
       transform: translate(55px, -20px);
-      display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;
+      display: flex; flex-direction: row; align-items: center; gap: 0.5rem;
       z-index: 6;                       /* above the tile */
     }
-    /* Stage-2 controls under the bubble: Refine (run it) + Customize (edit fields) */
-    .avatar-actions { display: flex; align-items: center; gap: 0.5rem; }
+    /* "Refine it!" now lives in the modal; .refine-btn styles it there */
     .refine-btn {
       flex-shrink: 0; border: none; cursor: pointer;
       background: var(--orange); color: #fff;
@@ -457,29 +458,16 @@
     /* ================================================================================ */
     /* Flow Arrows (left column -> right column)                                        */
     /* ================================================================================ */
-    .flow-arrow {
-      position: absolute; left: 50%; z-index: 5;
-      transform: translate(-50%, -50%);
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      pointer-events: none;
-    }
-    .flow-arrow-top    { top: 30%; }
-    .flow-arrow-bottom { top: 80%; }
-    .flow-caption {
-      font-family: 'Syne', sans-serif; font-size: 0.6rem; font-weight: 700;
-      letter-spacing: 0.09em; text-transform: uppercase; color: var(--teal-dk);
-      background: var(--cream); padding: 2px 7px; border-radius: 100px;
-      white-space: nowrap; box-shadow: 0 2px 6px rgba(14,31,28,0.12);
-      display: none;
-    }
-    .flow-line {
-      width: 16px; height: 0; border-top: 2px solid var(--teal-dk);
-      position: relative; opacity: 0.85;
-    }
-    .flow-line::after {   /* arrowhead */
-      content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
-      border-style: solid; border-width: 5px 0 5px 8px;
-      border-color: transparent transparent transparent var(--teal-dk);
+    /* the left cell of each row is the positioning anchor for that row's arrow */
+    .flow-anchor { position: relative; }
+    /* arrow glyph parked in the column gutter, vertically centered on its row.
+       Anchored to the cell (not the whole grid) so it stays put when the boxes
+       grow/shrink. Matches the down-arrow glyphs (.pl-arrow / .pl-out-arrow). */
+    .row-arrow {
+      position: absolute; top: 50%; right: 0;
+      transform: translate(calc(50% + 0.75rem), -50%);   /* sit in the 1.5rem gutter */
+      color: var(--teal-dk); font-size: 1.4rem; line-height: 1; opacity: 0.85;
+      pointer-events: none; z-index: 5;
     }
 
     
@@ -519,6 +507,13 @@
     .modal-body p { font-size: 0.92rem; line-height: 1.7; color: var(--text); margin-bottom: 0.9rem; }
     .modal-body p:last-child { margin-bottom: 0; }
     .modal-body strong { color: var(--teal-dk); }
+
+    /* primary action row at the bottom of the modal -- the "Refine it!" trigger */
+    .modal-actions {
+      display: flex; justify-content: flex-end; gap: 0.75rem;
+      margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+    }
+    .modal-actions .refine-btn { padding: 0.6rem 1.7rem; font-size: 0.95rem; }
 
     /* -------------------------------------------------------------------------------- */
     /* Structured-Generation Editor (form inside of the modal)                          */
@@ -610,7 +605,7 @@
     }
     /* arrows assume a 2-column layout; hide when the grid collapses to one column */
     @media (max-width: 600px) {
-      .flow-arrow { display: none; }
+      .row-arrow { display: none; }
     }
 
   </style>
@@ -672,7 +667,7 @@
          "Write me a one paragraph short story about ..."
          "Draw me an image with ..."
          -->
-        <div class="grid-item">
+        <div class="grid-item flow-anchor">
 
             <!-- Subtitle -->
             <div class="grid-subtitle">Step 1: Design an initial prompt using the dropdowns</div>
@@ -715,6 +710,9 @@
                 </div>
 
             </form>
+
+            <!-- arrow: this prompt -> the Original result to the right -->
+            <span class="row-arrow" aria-hidden="true">→</span>
         </div>
 
 
@@ -742,20 +740,17 @@
         <!-- -------------------------------------------------------------------------------- -->
         <!-- [Bottom-left] New prompt after AI "thinking" has refined the ad-lib              -->
         <!-- -------------------------------------------------------------------------------- -->
-        <div class="grid-item row-refined avatar-host robot-hidden">
+        <div class="grid-item row-refined avatar-host flow-anchor robot-hidden">
             <!-- Avatar peeking from behind the tile's top-left corner (hidden until Stage 1 finishes) -->
             <img class="avatar-img" src="{{ url_for('static', filename='robot.png') }}" alt="Guide robot">
 
-            <!-- Speech bubble + Stage-2 controls (Refine = run it, Customize = edit the fields) -->
+            <!-- Speech bubble + the Customize button to its RIGHT (Refine lives in the modal now) -->
             <div class="avatar-speech">
-                <div class="speech-bubble">Nice! Now let's have the AI refine our prompt.</div>
-                <div class="avatar-actions">
-                    <button type="button" class="refine-btn" id="refine-stage-btn">Refine it!</button>
-                    <button type="button" class="info-btn" id="refine-info-btn" aria-label="Customize the refinement">
-                        <span class="info-icon" aria-hidden="true">i</span>
-                        <span class="info-label">Customize</span>
-                    </button>
-                </div>
+                <div class="speech-bubble">Nice! Now let's tell the AI to think about our prompt <strong>before</strong> it generates output.</div>
+                <button type="button" class="info-btn" id="refine-info-btn" aria-label="Customize the refinement">
+                    <span class="info-icon" aria-hidden="true">i</span>
+                    <span class="info-label">Customizen AI "thinking"</span>
+                </button>
             </div>
 
             <!-- Subtitle & text-box -->
@@ -763,6 +758,9 @@
             <div class="grid-box preview" id="submission-output">
                 &lt;AI internal thinking process&gt;
             </div>
+
+            <!-- arrow: the refined prompt -> the Refined result to the right -->
+            <span class="row-arrow" aria-hidden="true">→</span>
 
         </div>
 
@@ -780,19 +778,8 @@
 
 
 
-        <!-- -------------------------------------------------------------------------------- -->
-        <!-- Flow Arrows (arrows pointing from the left column to the right column)           -->
-        <!-- -------------------------------------------------------------------------------- -->
-         <!-- NOTE: The "flow caption" text spans are currently set to NOT be displayed -->
-        <div class="flow-arrow flow-arrow-top" aria-hidden="true">
-            <span class="flow-caption">generating</span>
-            <span class="flow-line"></span>
-        </div>
-
-        <div class="flow-arrow flow-arrow-bottom" aria-hidden="true">
-            <span class="flow-caption">generating</span>
-            <span class="flow-line"></span>
-        </div>
+        <!-- Flow arrows now live INSIDE each row's left cell (.row-arrow) so they
+             stay centered in the gutter when the boxes resize. -->
 
     </div>
 
@@ -825,15 +812,16 @@
 
       <div class="modal-body">
         <p class="sg-intro">
-          Build the AI's refinement <strong>pipeline</strong>: drag steps from the bank into your plan.
-          The model runs them top-to-bottom (each step can build on the ones above), ending with
-          <strong>final_message</strong> — the refined prompt. Your plan applies to the next <strong>Refine</strong>.
+          Build the AI's <strong>thinking</strong> pipeline: drag planning steps from the bank into your overall
+          plan below. The model runs them top-to-bottom (each step can build on the ones above it), ending with the
+          <strong>final_message</strong> — which is the final refined prompt the AI will use for generation. Your 
+          plan will apply when you click to <strong>Refine It</strong>.
         </p>
 
         <!-- Field bank: draggable predefined steps -->
         <div class="sg-section">
           <div class="sg-section-head">
-            <h3 class="sg-h3">Field bank <span class="sg-hint-sm">— drag into your plan</span></h3>
+            <h3 class="sg-h3">Field bank <span class="sg-hint-sm">— click or drag into your plan (hover over to see a description)</span></h3>
             <span class="sg-mode-tag" id="sg-mode-tag">text</span>
           </div>
           <div class="sg-bank" id="sg-bank"><!-- JS renders draggable chips here --></div>
@@ -846,6 +834,11 @@
             <button type="button" class="sg-reset" id="sg-clear">Clear</button>
           </div>
           <div class="sg-plan" id="sg-plan"><!-- JS renders plan items + pinned final_message --></div>
+        </div>
+
+        <!-- Primary action: run the refinement (closes the modal, then fills boxes 3 & 4) -->
+        <div class="modal-actions">
+          <button type="button" class="refine-btn" id="refine-stage-btn">Refine it!</button>
         </div>
       </div>
     </div>
@@ -1205,6 +1198,8 @@
     // ================================================================================
     refineBtn.addEventListener("click", async () => {
         if (!stage1Combo) return;          // safety: Stage 1 must have run first
+        // the Refine button now lives inside the modal -> close it before running
+        document.getElementById("refine-modal").hidden = true;
         const combo = stage1Combo;
 
         refineBtn.disabled = true;
