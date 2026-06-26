@@ -19,7 +19,8 @@ ADLIB_OPTIONS = {
         "Dory",
         "Elsa",
         "K-Pop Demon Hunters",
-        "a bunny",
+        "a bunny", "a cat", "a dog",
+        "a superhero",
     ],
     "styles": [
         "Balenciaga",
@@ -28,6 +29,7 @@ ADLIB_OPTIONS = {
         "Cyberpunk",
         "SpongeBob",
         "the Wild West",
+        "a princess",
     ],
     "settings": [
         "a haunted castle",
