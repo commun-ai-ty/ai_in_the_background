@@ -150,8 +150,7 @@
     .toolbar-row {
       position: relative; z-index: 1;
       display: flex; align-items: center; justify-content: space-between;
-      gap: 1.5rem; margin-bottom: 1.5rem;
-      padding-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+      gap: 1.5rem; margin-bottom: 1rem;   /* divider now lives under the intro paragraph */
     }
     .toolbar-row .mode-toggle { margin-bottom: 0; }   /* the bar owns the spacing now */
     .bar-subtitle {
@@ -159,6 +158,19 @@
       font-size: clamp(1rem, 2vw, 1.25rem);
       font-weight: 500; line-height: 1.3; color: var(--text);
     }
+
+    /* full-width intro paragraph + divider, sitting just below the bar */
+    .bar-intro-wrap {
+      position: relative; z-index: 1;
+      margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar-intro {
+      max-width: 820px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.98rem; font-weight: 400; line-height: 1.7; color: var(--text);
+    }
+    .bar-intro strong { color: var(--teal-dk); font-weight: 700; }
 
     /* stack the bar on narrow screens */
     @media (max-width: 760px) {
@@ -445,13 +457,13 @@
       transition: transform 0.15s, box-shadow 0.15s;
     }
     .info-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(13,158,138,0.45); }
-    /* circled "i" on the left */
+    /* "Step 2:" badge on the left (replaces the old circled "i") */
     .info-btn .info-icon {
       flex-shrink: 0;
-      width: 20px; height: 20px; border-radius: 50%;
+      padding: 0.12rem 0.45rem; border-radius: 100px;
       background: #fff; color: var(--teal-dk);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Arial', sans-serif; font-weight: 800; font-size: 0.78rem; font-style: italic;
+      font-family: 'DM Sans', sans-serif; font-weight: 800; font-size: 0.72rem;
+      line-height: 1.3; white-space: nowrap;
     }
 
 
@@ -563,13 +575,16 @@
     }
     .sg-plan.drag-over { border-color: var(--teal); background: rgba(13,158,138,0.05); }
     .pl-item {
-      display: flex; align-items: center; gap: 0.5rem; cursor: grab;
+      display: flex; align-items: flex-start; gap: 0.5rem; cursor: grab;
       background: #fff; border: 1px solid var(--border); border-radius: 10px;
       padding: 0.5rem 0.65rem;
     }
     .pl-item.dragging { opacity: 0.4; }
-    .pl-handle { color: var(--muted); font-size: 0.9rem; cursor: grab; user-select: none; }
-    .pl-item-title { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--dark); }
+    .pl-handle { color: var(--muted); font-size: 0.9rem; cursor: grab; user-select: none; line-height: 1.5; }
+    /* title + description stack vertically in the middle of each plan item */
+    .pl-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+    .pl-item-title { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--dark); }
+    .pl-item-desc { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 400; line-height: 1.35; color: var(--muted); }
     .pl-item-remove {
       flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
       border: none; cursor: pointer; background: rgba(192,57,43,0.1); color: #c0392b;
@@ -579,6 +594,7 @@
     /* the pinned final_message step (not draggable / not removable) */
     .pl-item.pl-final { cursor: default; background: rgba(245,130,10,0.08); border-color: rgba(245,130,10,0.3); }
     .pl-final .pl-item-title { color: #9a5300; }
+    .pl-final .pl-item-desc  { color: rgba(154,83,0,0.7); }
     /* down-arrow between steps */
     .pl-arrow { text-align: center; color: var(--muted); font-size: 0.9rem; line-height: 1.1; }
 
@@ -653,6 +669,18 @@
                 <span class="mode-hint" id="mode-hint"></span>
             </div>
 
+        </div>
+
+        <!-- -------------------------------------------------------------------------------- -->
+        <!-- Intro paragraph (full-width, below the bar)                                      -->
+        <!-- -------------------------------------------------------------------------------- -->
+        <div class="bar-intro-wrap">
+            <p class="bar-intro">
+                In <strong>Step&nbsp;1</strong>, use the dropdowns to design a prompt and generate your first
+                <span data-mode-text="short story" data-mode-image="image">short story</span>. Then in <strong>Step&nbsp;2</strong>, let the AI
+                "think" — it refines your prompt before generating a second version. Compare the <strong>Original</strong> and
+                <strong>Refined</strong> versions to see how a little planning changes what the AI makes!
+            </p>
         </div>
 
     <!-- ================================================================================ -->
@@ -747,9 +775,9 @@
             <!-- Speech bubble + the Customize button to its RIGHT (Refine lives in the modal now) -->
             <div class="avatar-speech">
                 <div class="speech-bubble">Nice! Now let's tell the AI to think about our prompt <strong>before</strong> it generates output.</div>
-                <button type="button" class="info-btn" id="refine-info-btn" aria-label="Customize the refinement">
-                    <span class="info-icon" aria-hidden="true">i</span>
-                    <span class="info-label">Customizen AI "thinking"</span>
+                <button type="button" class="info-btn" id="refine-info-btn" aria-label="Step 2: Customize the AI's thinking">
+                    <span class="info-icon" aria-hidden="true">Step 2:</span>
+                    <span class="info-label">Customize AI thinking</span>
                 </button>
             </div>
 
@@ -1012,15 +1040,24 @@
     function renderPlan() {
         const plan = sgFields[currentMode];
         const steps = plan.map((f, i) => `
-            <div class="pl-item" draggable="true" data-index="${i}" title="${escapeAttr(f.description)}">
+            <div class="pl-item" draggable="true" data-index="${i}">
                 <span class="pl-handle" aria-hidden="true">⠿</span>
-                <span class="pl-item-title">${escapeHtml(f.title)}</span>
+                <div class="pl-item-body">
+                    <span class="pl-item-title">${escapeHtml(f.title)}</span>
+                    ${f.description ? `<span class="pl-item-desc">${escapeHtml(f.description)}</span>` : ""}
+                </div>
                 <button type="button" class="pl-item-remove" data-index="${i}" aria-label="Remove step">&times;</button>
             </div>
             <div class="pl-arrow" aria-hidden="true">↓</div>`).join("");
         const empty = plan.length ? "" : `<p class="sg-empty">Drag steps from the bank to build your pipeline.</p>`;
         sgPlanBox.innerHTML = empty + steps +
-            `<div class="pl-item pl-final"><span class="pl-handle" aria-hidden="true">🔒</span><span class="pl-item-title">final_message</span></div>`;
+            `<div class="pl-item pl-final">
+                <span class="pl-handle" aria-hidden="true">🔒</span>
+                <div class="pl-item-body">
+                    <span class="pl-item-title">final_message</span>
+                    <span class="pl-item-desc">The finished refined prompt, built from the steps above.</span>
+                </div>
+            </div>`;
     }
 
     function renderSG() {
