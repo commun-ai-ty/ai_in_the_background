@@ -9,23 +9,20 @@ import traceback
 
 from flask import Blueprint, jsonify, render_template, request, url_for
 
+# Internal app code
 from website.config import (
     ADLIB_OPTIONS,
+    FIELD_BANK,
     IMAGE_MODE,
-    STRUCTURED_FIELDS,
     SYSTEM_PROMPT_IMAGE,
     SYSTEM_PROMPT_TEXT,
 )
-
-# Internal app code
 from website.prompting import (
     generate_ai_image,
     generate_short_story,
     is_live_image_generation_available,
 )
 from website.structured_generation import structured_refine
-from website.config                import ADLIB_OPTIONS, IMAGE_MODE, FIELD_BANK
-from website.config                import SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
 
 PREMADE_FALLBACK_NOTICE = (
     "Live image generation is not configured; showing sample images."
@@ -36,10 +33,22 @@ PREMADE_FALLBACK_NOTICE = (
 # --------------------------------------------------------------------------------
 form_app = Blueprint("form_app", __name__)
 
-@form_app.route("/test")
-def test():
+
+def _render_app_page():
     # Hand the dropdown options + the structured-generation field bank to the template
     return render_template("test.html", options=ADLIB_OPTIONS, field_bank=FIELD_BANK)
+
+
+@form_app.route("/")
+def home():
+    # gunicorn serves the deployment at "/", so the root shows the app workspace
+    return _render_app_page()
+
+
+@form_app.route("/test")
+def test():
+    # Same app page, also kept at /test (the URL used throughout development)
+    return _render_app_page()
 
 
 # ================================================================================
@@ -95,6 +104,38 @@ def _clean_fields(raw):
         if title: cleaned.append({"title": title, "description": desc})
 
     return cleaned
+
+
+def _premade_image(stage: str) -> str:
+    """Return the static URL for a premade sample image (`basic` or `refined`)."""
+    filename = (
+        IMAGE_MODE["basic_image"] if stage == "basic" else IMAGE_MODE["refined_image"]
+    )
+    return url_for("static", filename=filename)
+
+
+def _resolve_image(stage, prompt_text, character, style, setting):
+    """
+    Pick a basic/refined image URL + any extra JSON fields for the response.
+
+    Premade samples are used for the default ad-lib combo, or whenever
+    OPENAI_API_KEY is unset (live generation off). Otherwise we call the image
+    API. Returns (image_url, extras, error).
+    """
+    if _is_default_combo(character, style, setting):
+        return _premade_image(stage), {"image_source": "premade"}, None
+
+    if not is_live_image_generation_available():
+        return (
+            _premade_image(stage),
+            {"image_source": "premade_fallback", "notice": PREMADE_FALLBACK_NOTICE},
+            None,
+        )
+
+    image, err = _safe_call(generate_ai_image, prompt_text, label=f"{stage} image generation")
+    if err:
+        return None, {}, err
+    return image, {"image_source": "generated"}, None
 
 # The page drives a 2-stage flow (both modes):
 #   STAGE 1  -> basic result from the ad-lib prompt        (box 2)
