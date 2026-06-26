@@ -942,7 +942,7 @@
         currentMode = mode;
         switchOpts.forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
         modeHint.textContent = (mode === "image")
-        ? "Image mode generates real images. The default combo uses ready-made samples."
+        ? ""
         : "";
         applyModeText(mode);   // swap mode-dependent labels (data-mode-text / data-mode-image)
         resetAll();   // switching modes starts the 2-stage flow over
