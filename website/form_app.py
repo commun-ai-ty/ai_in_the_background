@@ -4,15 +4,32 @@ Process user form inputs for the main app page.
 `website.form_app`
 
 """
+
 import traceback
-from flask import Blueprint, render_template, request, jsonify, url_for
+
+from flask import Blueprint, jsonify, render_template, request, url_for
+
+from website.config import (
+    ADLIB_OPTIONS,
+    IMAGE_MODE,
+    STRUCTURED_FIELDS,
+    SYSTEM_PROMPT_IMAGE,
+    SYSTEM_PROMPT_TEXT,
+)
 
 # Internal app code
-from website.prompting             import generate_ai_image, generate_short_story
+from website.prompting import (
+    generate_ai_image,
+    generate_short_story,
+    is_live_image_generation_available,
+)
 from website.structured_generation import structured_refine
 from website.config                import ADLIB_OPTIONS, IMAGE_MODE, FIELD_BANK
 from website.config                import SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
 
+PREMADE_FALLBACK_NOTICE = (
+    "Live image generation is not configured; showing sample images."
+)
 
 # --------------------------------------------------------------------------------
 # Create & route the Flask app
@@ -34,26 +51,29 @@ def _adlib_fields(data):
     """
     return (
         (data.get("character") or "").strip(),
-        (data.get("style"    ) or "").strip(),
-        (data.get("setting"  ) or "").strip(),
+        (data.get("style") or "").strip(),
+        (data.get("setting") or "").strip(),
     )
+
 
 def _is_default_combo(character, style, setting):
     """
     True when the selections match the default combo (use the premade images).
     """
     return (
-        character   == IMAGE_MODE["character"]
-        and style   == IMAGE_MODE["style"    ]
-        and setting == IMAGE_MODE["setting"  ]
+        character == IMAGE_MODE["character"]
+        and style == IMAGE_MODE["style"]
+        and setting == IMAGE_MODE["setting"]
     )
+
 
 def _safe_call(fn, *args, label="operation"):
     """
     Run an external API call; on failure print the traceback to the server
     terminal and return (None, error_message) instead of raising.
     """
-    try: return fn(*args), None
+    try:
+        return fn(*args), None
     except Exception as exc:
         print(f"\n[form_app] {label} FAILED:")
         traceback.print_exc()
@@ -114,17 +134,16 @@ def generate_basic_image():
     if (not character) or (not style) or (not setting):
         return jsonify({"ok": False, "error": "Please choose all options"}), 400
 
-    # Check if we should use the default image or new ones
-    if _is_default_combo(character, style, setting):
-        image = url_for("static", filename=IMAGE_MODE["basic_image"])   # premade sample
+    prompt_text = f" {character} {style} {setting}"
+    image, extras, err = _resolve_image("basic", prompt_text, character, style, setting)
+    if err:
+        return (
+            jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
+            502,
+        )
 
-    # Generate the basic image
-    else:
-        prompt_text = f" {character} {style} {setting}"
-        image, err = _safe_call(generate_ai_image, prompt_text, label="basic image generation")
-        if err: return jsonify({"ok": False, "error": f"Image generation failed: {err}"}), 502
+    return jsonify({"ok": True, "image": image, **extras})
 
-    return jsonify({"ok": True, "image": image})
 
 # ================================================================================
 # STAGE 2a: refine the ad-lib prompt (mode-aware structured generation)
@@ -183,12 +202,18 @@ def generate_refined_image():
     character, style, setting = _adlib_fields(data)
     refined_prompt = (data.get("refined_prompt") or "").strip()
 
-    if _is_default_combo(character, style, setting):
-        image = url_for("static", filename=IMAGE_MODE["refined_image"])  # premade sample
-    else:
-        if not refined_prompt: return jsonify({"ok": False, "error": "Missing refined prompt"}), 400
-        image, err = _safe_call(generate_ai_image, refined_prompt, label="refined image generation")
-        if err: return jsonify({"ok": False, "error": f"Image generation failed: {err}"}), 502
+    if not refined_prompt and not _is_default_combo(character, style, setting):
+        if is_live_image_generation_available():
+            return jsonify({"ok": False, "error": "Missing refined prompt"}), 400
+        refined_prompt = f" {character} {style} {setting}"
 
-    return jsonify({"ok": True, "image": image})
+    image, extras, err = _resolve_image(
+        "refined", refined_prompt, character, style, setting
+    )
+    if err:
+        return (
+            jsonify({"ok": False, "error": f"Image generation failed: {err}"}),
+            502,
+        )
 
+    return jsonify({"ok": True, "image": image, **extras})

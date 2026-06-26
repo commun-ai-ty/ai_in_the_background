@@ -622,7 +622,7 @@
     <!-- Navigation -->
     <!-- ================================================================================ -->
     <nav>
-        <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
+        <a class="nav-logo" href="{{ url_for('form_app.home') }}" aria-label="Commun-AI-ty home">
         <img src="{{ url_for('static', filename='commun-ai-ty_logo_color.png') }}" alt="Commun-AI-ty">
         </a>
         <a class="nav-cta" href="mailto:commun-ai-ty@umich.edu">Contact Us</a>
@@ -804,7 +804,7 @@
   <!-- FOOTER                                                                           -->
   <!-- ================================================================================ -->
   <footer>
-    <a class="nav-logo" href="{{ url_for('home_dash.home') }}" aria-label="Commun-AI-ty home">
+    <a class="nav-logo" href="{{ url_for('form_app.home') }}" aria-label="Commun-AI-ty home">
       <img src="{{ url_for('static', filename='commun-ai-ty_logo_white.png') }}" alt="Commun-AI-ty">
     </a>
     <div class="footer-links">
@@ -1171,13 +1171,16 @@
 
         button.disabled = true;
         status.className = "save-status";
+        let completionStatus = null;
 
         try {
             if (currentMode === "image") {
+                // Stage 1: image from the basic prompt -> top-right
                 status.textContent = "Generating basic image...";
                 setLoading(basicStory, "Generating basic image");
                 startTimer();
                 const s1 = await postJSON(URL_BASIC_IMAGE, combo);
+                if (s1.notice) completionStatus = s1.notice;
                 basicStory.innerHTML = `<img src="${s1.image}" alt="Basic image">`;
             } else {
                 status.textContent = "Writing the basic story...";

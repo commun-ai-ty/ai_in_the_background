@@ -5,19 +5,40 @@ Configurable constants for the app.
 
 """
 
-
 # ================================================================================
 # Ad-lib dropdown options  (edit these lists to change the dropdown choices)
 # ================================================================================
 ADLIB_OPTIONS = {
-    "characters": ["Harry Potter", "Bluey", "Sherlock Holmes", "Mario", "Wonder Woman",
-                   "Spider-Man", "Dory", "Elsa", "K-Pop Demon Hunters", "a bunny"],
-
-    "styles":     ["Balenciaga", "a Mystery Novel", "Medieval", "Cyberpunk", "SpongeBob", 
-                   "the Wild West"],
-
-    "settings":   ["a haunted castle", "a futuristic city", "the deep ocean", "a quiet village", 
-                   "University of Michigan", "a fantastical forest", "a mystical savannah", "space"],
+    "characters": [
+        "Harry Potter",
+        "Bluey",
+        "Sherlock Holmes",
+        "Mario",
+        "Wonder Woman",
+        "Spider-Man",
+        "Dory",
+        "Elsa",
+        "K-Pop Demon Hunters",
+        "a bunny",
+    ],
+    "styles": [
+        "Balenciaga",
+        "a Mystery Novel",
+        "Medieval",
+        "Cyberpunk",
+        "SpongeBob",
+        "the Wild West",
+    ],
+    "settings": [
+        "a haunted castle",
+        "a futuristic city",
+        "the deep ocean",
+        "a quiet village",
+        "University of Michigan",
+        "a fantastical forest",
+        "a mystical savannah",
+        "space",
+    ],
 }
 
 # ================================================================================
@@ -26,11 +47,11 @@ ADLIB_OPTIONS = {
 # We lock the dropdown options to the harry potter ones that the pre-made images
 # were from.
 IMAGE_MODE = {
-    "character":     "Harry Potter",
-    "style":         "Balenciaga",
-    "setting":       "a haunted castle",
-    "basic_image":   "basic_image.png",     # premade image for the BASIC prompt
-    "refined_image": "refined_image.png",   # premade image for the REFINED prompt
+    "character": "Harry Potter",
+    "style": "Balenciaga",
+    "setting": "a haunted castle",
+    "basic_image": "basic_image.png",  # premade image for the BASIC prompt
+    "refined_image": "refined_image.png",  # premade image for the REFINED prompt
 }
 
 
@@ -116,7 +137,6 @@ FIELD_BANK = {
         {"title": "Composition & Camera",  "description": "Framing and perspective (e.g., extreme close-up, low-angle shot, 24mm lens)."},
         {"title": "Quality & Technical",   "description": "Engine and render tags (e.g., 8k resolution, intricate details, masterpiece, octane render)."},
     ],
-
     # Short Story Generation
     "text": _SHARED_STEPS + [
         {"title": "Scene & Quote",             "description": "Reference a known scene or quote from the original story and work it in to the new story, but changed with our style twist added."},
