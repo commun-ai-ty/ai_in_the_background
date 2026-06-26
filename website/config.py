@@ -93,15 +93,23 @@ lengths to build tension").\n
 
 
 # ================================================================================
-# Structured-generation fields 
+# Structured-generation FIELD BANK
 # ================================================================================
-# The "setup" that users can edit (each includes a title + description). The 
-# Pydantic schema is built dynamically from these, so they can be customized 
-# from the page. Up to 5 fields per mode; a `final_prompt` is always added.
-STRUCTURED_FIELDS = {
+# Pre-defined steps users can DRAG into their refinement pipeline (per mode).
+# The plan starts empty (only a `final_message` step, always appended by the
+# schema builder); users compose their own order, e.g. Draft -> Critique -> final.
+#
+# "Draft"/"Critique" are generic reasoning steps shared by both modes.
+_SHARED_STEPS = [
+    {"title": "Draft",      "description": "Write a quick first-pass draft of the refined prompt."},
+    {"title": "Critique",   "description": "Critique the draft above: what is weak, missing, or could be sharper? List concrete fixes."},
+    {"title": "Brainstorm", "description": "Brainstorm about what ideas we could cover in order to fully address the prompt."},
+]
+
+FIELD_BANK = {
 
     # Image Generation
-    "image": [
+    "image": _SHARED_STEPS + [
         {"title": "Core Subject",          "description": "The primary focus, described with precise, vivid physical details."},
         {"title": "Medium & Style",        "description": "The specific visual format (e.g., 35mm macro photography, cyberpunk concept art, oil painting)."},
         {"title": "Lighting & Atmosphere", "description": "The mood and illumination (e.g., volumetric lighting, golden hour, bioluminescent glow)."},
@@ -110,14 +118,13 @@ STRUCTURED_FIELDS = {
     ],
 
     # Short Story Generation
-    "text": [
-        {"title": "Scene & Quote",             "description": " Reference a known scene or quote from the original story and work it in to the new story, but changed with our style twist added."},
-        #{"title": "Core Narrative Arc",       "description": "The immediate conflict, the climax, and the resolution/twist, compressed to fit one paragraph."},
+    "text": _SHARED_STEPS + [
+        {"title": "Scene & Quote",             "description": "Reference a known scene or quote from the original story and work it in to the new story, but changed with our style twist added."},
+        {"title": "Core Narrative Arc",        "description": "The immediate conflict, the climax, and the resolution/twist, compressed to fit one paragraph."},
         {"title": "Character & Perspective",   "description": "The focal character and the point of view (e.g., close third-person, unreliable first-person)."},
         {"title": "Setting & Sensory Anchors", "description": "The specific environment and 1-2 distinct sensory details (smell, sound, texture)."},
         {"title": "Tone & Voice",              "description": "The emotional atmosphere and stylistic execution (e.g., lyrical and melancholic, gritty realism)."},
         {"title": "Structural Constraints",    "description": "Instructions on pacing and structure (e.g., 'start in media res', 'end with a lingering question')."},
     ],
 }
-#
 

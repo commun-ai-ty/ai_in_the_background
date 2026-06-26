@@ -10,7 +10,7 @@ from flask import Blueprint, render_template, request, jsonify, url_for
 # Internal app code
 from website.prompting             import generate_ai_image, generate_short_story
 from website.structured_generation import structured_refine
-from website.config                import ADLIB_OPTIONS, IMAGE_MODE, STRUCTURED_FIELDS 
+from website.config                import ADLIB_OPTIONS, IMAGE_MODE, FIELD_BANK
 from website.config                import SYSTEM_PROMPT_IMAGE, SYSTEM_PROMPT_TEXT
 
 
@@ -21,8 +21,8 @@ form_app = Blueprint("form_app", __name__)
 
 @form_app.route("/test")
 def test():
-    # Hand the dropdown options + default structured-generation fields to the template
-    return render_template("test.html", options=ADLIB_OPTIONS, structured_fields=STRUCTURED_FIELDS)
+    # Hand the dropdown options + the structured-generation field bank to the template
+    return render_template("test.html", options=ADLIB_OPTIONS, field_bank=FIELD_BANK)
 
 
 # ================================================================================
@@ -59,66 +59,51 @@ def _safe_call(fn, *args, label="operation"):
         traceback.print_exc()
         return None, str(exc)
 
-def _clean_fields(raw, default):
+def _clean_fields(raw):
     """
-    Validate custom structured-generation fields posted from the page
-    (a list of {title, description}); fall back to `default` if none are usable.
-    Caps at 5 fields; a field needs at least a title.
+    Validate the structured-generation pipeline posted from the page (an ordered
+    list of {title, description}). Returns the cleaned list -- possibly empty,
+    since an empty plan just produces `final_message`. Caps at 6 steps.
     """
-    if not isinstance(raw, list): return default
+    if not isinstance(raw, list): return []
 
     cleaned = []
-    for f in raw[:5]:                                  # cap at 5 fields
+    for f in raw[:6]:                                  # cap at 6 steps
         if not isinstance(f, dict): continue
         title = (f.get("title"      ) or "").strip()
         desc  = (f.get("description") or "").strip()
         if title: cleaned.append({"title": title, "description": desc})
 
-    return cleaned or default
+    return cleaned
+
+# The page drives a 2-stage flow (both modes):
+#   STAGE 1  -> basic result from the ad-lib prompt        (box 2)
+#   STAGE 2  -> refine the prompt (box 3) + refined result (box 4)
+# NOTE: In image mode, the default combo returns the premade /static images.
 
 # ================================================================================
-# [TEXT MODE] One-shot: refine the prompt + generate two short stories
+# STAGE 1: basic result from the ad-lib prompt (one route per mode)
 # ================================================================================
-@form_app.route("/save", methods=["POST"])
-def save():
-    # Read JSON from the browser: {"mode": "...", "character": "...", "style": "...", "setting": "..."}
+
+# --------------------------------------------------------------------------------
+# [TEXT] Basic short story from the ad-lib prompt
+# --------------------------------------------------------------------------------
+@form_app.route("/generate-basic-story", methods=["POST"])
+def generate_basic_story():
     data = request.get_json(silent=True) or {}
     character, style, setting = _adlib_fields(data)
 
-    # Guard for missing selections
     if not character or not style or not setting:
         return jsonify({"ok": False, "error": "Please choose all options"}), 400
 
-    # Construct the prompt from the ad-lib
     prompt_text = f" {character} {style} {setting}"
+    story, err = _safe_call(generate_short_story, prompt_text, label="basic story generation")
+    if err: return jsonify({"ok": False, "error": f"Story generation failed: {err}"}), 502
 
-    # Refine with structured generation (fields come from the page, or the text defaults)
-    fields = _clean_fields(data.get("fields"), STRUCTURED_FIELDS["text"])
-    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_TEXT, fields, label="prompt refinement")
-    if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
-    refined_prompt = result["final_prompt"]
-
-    # Generate a short story for each prompt
-    basic_story   = generate_short_story(prompt_text)     # Top-right    -> uses the basic prompt
-    refined_story = generate_short_story(refined_prompt)  # Bottom-right -> uses the refined prompt
-
-    return jsonify({
-        "ok"            : True,
-        "mode"          : "text",
-        "prompt_text"   : refined_prompt,
-        "structured"    : result,          # {components, final_prompt} for the modal
-        "basic_story"   : basic_story,
-        "refined_story" : refined_story,
-    })
-
-
-# ================================================================================
-# [IMAGE MODE] Staged generation -- the page calls these 3 routes in order
-# ================================================================================
-# NOTE: The default combo returns the premade /static images instead of generating
+    return jsonify({"ok": True, "story": story})
 
 # --------------------------------------------------------------------------------
-# Stage 1: Image from the BASIC (ad-lib) prompt
+# [IMAGE] Basic image from the ad-lib prompt
 # --------------------------------------------------------------------------------
 @form_app.route("/generate-basic-image", methods=["POST"])
 def generate_basic_image():
@@ -141,12 +126,13 @@ def generate_basic_image():
 
     return jsonify({"ok": True, "image": image})
 
-# --------------------------------------------------------------------------------
-# Stage 2: Refine the ad-lib prompt (for image generation)
-# --------------------------------------------------------------------------------
+# ================================================================================
+# STAGE 2a: refine the ad-lib prompt (mode-aware structured generation)
+# ================================================================================
 @form_app.route("/refine-prompt", methods=["POST"])
 def refine_prompt_stage():
     data = request.get_json(silent=True) or {}
+    mode  = (data.get("mode") or "text").strip()
     character, style, setting = _adlib_fields(data)
 
     if not character or not style or not setting:
@@ -154,19 +140,42 @@ def refine_prompt_stage():
 
     prompt_text = f" {character} {style} {setting}"
 
-    # Refine with structured generation (fields come from the page, or the image defaults)
-    fields = _clean_fields(data.get("fields"), STRUCTURED_FIELDS["image"])
-    result, err = _safe_call(structured_refine, prompt_text, SYSTEM_PROMPT_IMAGE, fields, label="prompt refinement")
+    # Mode only picks the system prompt now; the ordered pipeline comes from the page
+    system_prompt = SYSTEM_PROMPT_IMAGE if mode == "image" else SYSTEM_PROMPT_TEXT
+
+    fields = _clean_fields(data.get("fields"))
+    result, err = _safe_call(structured_refine, prompt_text, system_prompt, fields, label="prompt refinement")
     if err: return jsonify({"ok": False, "error": f"Refinement failed: {err}"}), 502
 
     return jsonify({
         "ok"             : True,
-        "refined_prompt" : result["final_prompt"],
-        "structured"     : result,         # {components, final_prompt} for the modal
+        "refined_prompt" : result["final_message"],
+        "structured"     : result,         # {components, final_message} for the page pipeline
     })
 
+
+# ================================================================================
+# STAGE 2b: refined result from the refined prompt (one route per mode)
+# ================================================================================
+
 # --------------------------------------------------------------------------------
-# Stage 3: Image from the REFINED prompt
+# [TEXT] Refined short story from the refined prompt
+# --------------------------------------------------------------------------------
+@form_app.route("/generate-refined-story", methods=["POST"])
+def generate_refined_story():
+    data = request.get_json(silent=True) or {}
+    refined_prompt = (data.get("refined_prompt") or "").strip()
+
+    if not refined_prompt:
+        return jsonify({"ok": False, "error": "Missing refined prompt"}), 400
+
+    story, err = _safe_call(generate_short_story, refined_prompt, label="refined story generation")
+    if err: return jsonify({"ok": False, "error": f"Story generation failed: {err}"}), 502
+
+    return jsonify({"ok": True, "story": story})
+
+# --------------------------------------------------------------------------------
+# [IMAGE] Refined image from the refined prompt
 # --------------------------------------------------------------------------------
 @form_app.route("/generate-refined-image", methods=["POST"])
 def generate_refined_image():

@@ -33,7 +33,7 @@ def _field_name(title: str, index: int) -> str:
 def build_schema(fields: list[dict]):
     """
     Build a Pydantic model from a list of {title, description} dicts, plus an
-    always-present `final_prompt`. Returns (model, names) where `names` holds the
+    always-present `final_message`. Returns (model, names) where `names` holds the
     identifiers parallel to `fields` (so values can be mapped back to titles).
     """
     model_fields = {}
@@ -51,9 +51,9 @@ def build_schema(fields: list[dict]):
         names.append(name)
         model_fields[name] = (str, Field(description=f.get("description", "")))
 
-    model_fields["final_prompt"] = (
+    model_fields["final_message"] = (
         str,
-        Field(description="The complete refined prompt as one ready-to-use string combining all elements above."),
+        Field(description="The complete refined prompt as one ready-to-use string, building on all the steps above."),
     )
     return create_model("CustomRefinedPrompt", **model_fields), names
 
@@ -65,7 +65,7 @@ def structured_refine(base_prompt: str, system_prompt: str, fields: list[dict]) 
     """
     Refine a basic ad-lib prompt into a structured result using structured
     outputs. The schema is built from `fields` ({title, description}); returns
-    {"components": [{title, description, value}], "final_prompt": str}.
+    {"components": [{title, description, value}], "final_message": str}.
 
     Exceptions are NOT caught here -- the caller (_safe_call in form_app) logs the
     full traceback and turns failures into a proper error response.
@@ -98,5 +98,5 @@ def structured_refine(base_prompt: str, system_prompt: str, fields: list[dict]) 
         for f, name in zip(fields, names)
     ]
 
-    return {"components": components, "final_prompt": parsed.get("final_prompt", "")}
+    return {"components": components, "final_message": parsed.get("final_message", "")}
 
