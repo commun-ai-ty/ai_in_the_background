@@ -122,21 +122,33 @@ lengths to build tension").\n
 #
 # "Draft"/"Critique" are generic reasoning steps shared by both modes.
 _SHARED_STEPS = [
-    {"title": "Draft",      "description": "Write a quick first-pass draft of the refined prompt."},
-    {"title": "Critique",   "description": "Critique the draft above: what is weak, missing, or could be sharper? List concrete fixes."},
-    {"title": "Brainstorm", "description": "Brainstorm about what ideas we could cover in order to fully address the prompt."},
+    {"title": "Draft",       "description": "Write a quick first-pass draft of the refined prompt."},
+    {"title": "Critique",    "description": "Critique the draft above: what is weak, missing, or could be sharper? List concrete fixes."},
+    {"title": "Brainstorm",  "description": "Brainstorm about what ideas we could cover in order to fully address the prompt."},
+    {"title": "User Intent", "description": "Thinking about what the user's intent by asking this question is."},
 ]
 
 FIELD_BANK = {
 
     # Image Generation
     "image": _SHARED_STEPS + [
+        # What the picture is ABOUT (content / subject matter)
         {"title": "Core Subject",          "description": "The primary focus, described with precise, vivid physical details."},
+        {"title": "Action & Moment",       "description": "What the subject is doing and the exact moment captured (e.g., mid-leap over a chasm, blowing out a candle, a tense standoff)."},
+        {"title": "Mood & Emotion",        "description": "The feeling the image conveys through expression and body language (e.g., quiet wonder, looming dread, triumphant joy)."},
+        {"title": "Story & Meaning",       "description": "The little story behind the picture: what is happening and why it matters (e.g., a daring rescue, a bittersweet goodbye)."},
+        {"title": "Key Details & Symbols", "description": "Meaningful objects, clothing, or symbols that hint at the story (e.g., a cracked pocket watch, a royal crest, a single wilting rose)."},
+        {"title": "Characters & Cast",     "description": "Who else appears and how they interact with the main character (e.g., a loyal sidekick, a sneering rival, a worried crowd)."},
+        {"title": "Background & Setting",  "description": "What kinds of things might appear in the background, and what does the setting look like (e.g., the ground, skyline, buildings, etc.)?"},
+        
+        
+        # How the picture is RENDERED (style & craft)
         {"title": "Medium & Style",        "description": "The specific visual format (e.g., 35mm macro photography, cyberpunk concept art, oil painting)."},
         {"title": "Lighting & Atmosphere", "description": "The mood and illumination (e.g., volumetric lighting, golden hour, bioluminescent glow)."},
         {"title": "Composition & Camera",  "description": "Framing and perspective (e.g., extreme close-up, low-angle shot, 24mm lens)."},
         {"title": "Quality & Technical",   "description": "Engine and render tags (e.g., 8k resolution, intricate details, masterpiece, octane render)."},
     ],
+
     # Short Story Generation
     "text": _SHARED_STEPS + [
         {"title": "Scene & Quote",             "description": "Reference a known scene or quote from the original story and work it in to the new story, but changed with our style twist added."},
